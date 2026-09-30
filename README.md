@@ -1,47 +1,74 @@
 # Gabriel Ferrari — Portfolio
 
-Static HTML/CSS/JavaScript portfolio. No build step or package installation.
+Home bilíngue em Astro, TypeScript strict e CSS próprio. Output estático, sem React, Motion, MDX ou scripts de terceiros. Este é o Checkpoint 2 local; não foi publicado.
 
-## Local preview
+## Desenvolvimento e validação
 
-Serve the parent directory so the local URL has the same `/Portfolio/` prefix as GitHub Pages:
+Use Node.js 24 LTS ou versão compatível com o Astro instalado.
 
-```bash
-python3 -m http.server 8765 --bind 127.0.0.1 --directory /Users/ferrari/Projects/VSCode
+```sh
+npm ci
+npm run dev
+npm run check
+npm run build
+npx playwright install chromium webkit
+npm test
+npm run preview
 ```
 
-Open `http://127.0.0.1:8765/Portfolio/pt/` or `/Portfolio/en/`.
+Preview: `http://127.0.0.1:4321/Portfolio/pt/` e `/Portfolio/en/`.
 
-## Checks
+## Estrutura
 
-```bash
-node --check script.js
-node scripts/check.mjs
+- `src/pages/index.astro`: entrada de idioma; links PT/EN funcionam sem JavaScript.
+- `src/pages/[locale]/index.astro`: gera somente as homes PT e EN.
+- `src/layouts/Layout.astro`: metadata, canonical/hreflang, fontes e preferência de idioma.
+- `src/components/`: Hero, Carely, Fintech, Jordania, perfil técnico e demais seções.
+- `src/content.config.ts` e `src/content/projects/*.md`: uma Content Collection com schema tipado; identidade, tecnologias, links e limites compartilhados; copy e legendas separados por idioma.
+- `src/i18n.ts`: textos gerais PT/EN.
+- `src/styles/global.css`: tokens e fundamentos; componentes usam scoped styles.
+- `src/assets/`: fotografias/screenshots originais e fontes locais, processados pelo Astro/Vite.
+- `public/assets/documents/`: CV em português. Não existe CV inglês.
+- `public/assets/fonts/`: licenças OFL.
+- `images/`: assets originais da primeira versão, preservados; não entram no build.
+- `tests/home.spec.ts`: validação essencial em Chromium e WebKit.
+
+## Interações
+
+Carely: links para screenshots viram ampliação em `<dialog>` nativo. Escape, fechamento e restauração de foco; `<details>` expande somente as duas capturas secundárias. Sem JS, links abrem as imagens e a expansão continua nativa.
+
+Fintech: radios nativos e TypeScript local selecionam três cenários. Explicação e percurso atualizam imediatamente; a seleção cancela a progressão anterior. Motion finito de até 510 ms; reduced motion usa estado final. Sem JS, as três explicações ficam visíveis. Não há requests para as APIs dos projetos.
+
+Idioma: escolha manual tem prioridade; somente a raiz redireciona. Rotas localizadas nunca redirecionam automaticamente. Storage indisponível não impede navegação.
+
+## GitHub Pages
+
+`site: https://ghabrielferrari.github.io`, `base: /Portfolio/`, trailing slash, output estático em `dist/`. Acesso direto e reload usam arquivos `index.html` por rota.
+
+`ci.yml` executa type-check, build e testes. `deploy.yml` está preparado com **gatilho exclusivamente manual**. Nenhum workflow foi disparado e nenhuma configuração remota foi alterada. No checkpoint de publicação, configurar Pages para GitHub Actions e executar o deploy somente após aprovação.
+
+## Evidências e performance
+
+Veja `review/validation.md`, `review/links.json` e `review/lighthouse/`. Medição diagnóstica mobile a 390×844, throttling padrão do Lighthouse, Chromium local e cache limpo. Não representa mediana de Release Candidate nem performance publicada.
+
+Para repetir um diagnóstico autorizado, crie `review/lighthouse/` e execute:
+
+```sh
+node scripts/lighthouse.mjs http://127.0.0.1:4321/Portfolio/pt/ current
 ```
 
-## Structure
+## Limites factuais
 
-- `index.html`: language entry, with real PT/EN links without JavaScript.
-- `pt/index.html` and `en/index.html`: independent static localized home pages.
-- `style.css`: shared tokens, typography, layout, system dark theme and reduced motion.
-- `script.js`: manual language preference and entry redirect only. Explicit locale URLs never redirect.
-- `assets/`: self-hosted font, current portrait and original Portuguese CV converted to PDF.
-- `images/`: original assets retained, not used by the new home.
+Carely: cinco capturas próprias de desenvolvimento com dados demonstrativos. A revisão da build atual da App Store não foi confirmada. Não há claim de envio efetivo das candidaturas à instituição.
 
-## Publication configuration
+Fintech: projeto pessoal integralmente desenvolvido por Gabriel; diagrama de implementação, sem execução real ou claim de validação em produção.
 
-Checked on 29 September 2026: GitHub Pages uses `main`, `/ (root)`, at `https://ghabrielferrari.github.io/Portfolio/`, with HTTPS. No custom build workflow or publishing-setting change is required. This implementation is a local review checkpoint and has not been published.
+Jordania: contribuição em frontend/iOS, sessão, autenticação e integração Java/Spring. Providers Apple/Google reais funcionaram durante o desenvolvimento. Outros módulos do backend da equipe não são atribuídos a Gabriel.
 
-## Content boundaries
+Casos completos ficam para o Checkpoint 3. Futuras rotas: `/Portfolio/pt/projetos/<slug>/` e `/Portfolio/en/work/<slug>/`, com `carely`, `fintech`, `jordania`; nenhuma rota ou link de case foi criado antecipadamente.
 
-This checkpoint contains the home only. Selected Work describes Gabriel's confirmed contributions in Carely, Fintech and Jordania. The Carely captures are development screenshots with demo data; the precise screenshot revision in the current App Store binary remains unconfirmed. Complete case pages and an English CV remain pending. Commit history must not be treated as the sole proof of authorship.
+## Fontes e assets
 
-Source Sans 3 remains the chosen typeface. The existing palette, hierarchy, responsive layout, dark mode and reduced-motion support are preserved.
+Source Sans 3: arquivo local já validado na baseline. Bricolage Grotesque: um WOFF2 latino, peso 600, optical sizing variável; ambos SIL OFL. O subset cobre os caracteres PT/EN usados. Fontes preloaded, fallback com métricas ajustadas, dimensões de imagem reservadas e WebP responsivo via `astro:assets`.
 
-## Assets
-
-- Source Sans 3: Google Fonts, Adobe, SIL Open Font License included in `assets/fonts/OFL.txt`.
-- Portrait: Gabriel Ferrari's current public GitHub avatar, inspected against the supplied professional photograph.
-- Portuguese CV: converted from `/Users/ferrari/Desktop/cv_gabrielferrari.docx` without rewriting its content. The original DOCX is not bundled with the site.
-
-- Carely: five development screenshots supplied by Gabriel, resized and JPEG compressed without changing screen content.
+Referências de implementação: [Content Collections](https://docs.astro.build/en/guides/content-collections/) e [GitHub Pages](https://docs.astro.build/en/guides/deploy/github/), documentação oficial Astro.

@@ -1,0 +1,30 @@
+---
+import { Image } from 'astro:assets';
+import portrait from '../assets/gabriel-ferrari.png';
+import { copy, base, type Locale } from '../i18n';
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const c = copy[locale];
+---
+<section class="hero container grid" id="hero" aria-labelledby="hero-heading">
+  <h1 id="hero-heading" class="hero-enter">{c.headline}</h1>
+  <figure class="portrait hero-enter" style="--delay:70ms">
+    <Image src={portrait} widths={[160,240,320,460]} sizes="(max-width:599px) 96px, (max-width:1023px) 180px, 280px" alt="Gabriel Ferrari" loading="eager" fetchpriority="high" format="webp" />
+  </figure>
+  <p class="support hero-enter" style="--delay:140ms">{c.support}</p>
+  <div class="actions hero-enter" style="--delay:210ms">
+    <a class="button primary" href="#work">{c.projectsCTA}</a>
+    <a class="button" href={locale === 'pt' ? `${base}assets/documents/gabriel-ferrari-cv-pt.pdf` : '#contact'} download={locale === 'pt' ? 'Gabriel-Ferrari-CV-PT.pdf' : undefined}>{c.secondCTA}</a>
+  </div>
+</section>
+<style>
+  .hero{padding-block:96px 128px;row-gap:32px;align-items:start}
+  h1{grid-column:1/10;font-family:var(--display);font-size:clamp(64px,6.6vw,96px);line-height:1.04;letter-spacing:-.055em;max-width:17ch}
+  .portrait{grid-column:10/-1;grid-row:1/4;margin-top:12px;align-self:start}
+  .portrait img{width:100%;border-radius:12px;aspect-ratio:1;object-fit:cover}
+  .support{grid-column:3/9;font-size:22px;line-height:1.45;margin-top:16px}
+  .actions{grid-column:3/10;display:flex;flex-wrap:wrap;gap:16px}
+  @media(min-width:1440px){h1{font-size:96px}}
+  @media(min-width:600px) and (max-width:1023px){.hero{padding-block:64px 96px}h1{grid-column:1/7;font-size:64px}.portrait{grid-column:7/-1}.support{grid-column:2/7;font-size:20px}.actions{grid-column:2/8}}
+  @media(max-width:599px){.hero{padding-block:48px 64px;row-gap:24px}h1{grid-column:1/-1;font-size:clamp(42px,11.8vw,64px);line-height:1.08;letter-spacing:-.045em}.support{grid-column:1/4;grid-row:2;font-size:18px;margin-top:0}.portrait{grid-column:4;grid-row:2;margin-top:4px}.actions{grid-column:1/-1;grid-row:3;gap:12px}.button{padding-inline:20px}}
+</style>

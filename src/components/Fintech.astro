@@ -1,0 +1,103 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { type Locale } from '../i18n';
+import ProjectLinks from './ProjectLinks.astro';
+interface Props { project: CollectionEntry<'projects'>; locale: Locale }
+const { project, locale } = Astro.props;
+const p = project.data[locale];
+const pt = locale === 'pt';
+const scenarios = pt ? [
+  {title:'Requisição autenticada',path:'iOS → Sessão → API → Banco',text:'O cliente obtém a sessão, envia a requisição autenticada e recebe o resultado. A API valida o acesso à conta e à categoria antes da operação no PostgreSQL.',stages:[0,1,2,3]},
+  {title:'401 + refresh concorrente',path:'iOS → Sessão ↔ API → iOS',text:'Após um 401, AuthenticationSession coordena um único refresh entre requisições concorrentes. O cliente repete a requisição uma vez; quando necessário, invalida a sessão e solicita reautenticação.',stages:[0,1,2]},
+  {title:'Retry com idempotência',path:'iOS → Sessão → API → Banco',text:'O retry preserva o payload e a mesma chave de idempotência da operação. A API valida ownership; o PostgreSQL mantém a gravação e o resultado de idempotência na mesma transação.',stages:[0,1,2,3]},
+] : [
+  {title:'Authenticated request',path:'iOS → Session → API → Database',text:'The client obtains its session, sends an authenticated request, and receives the result. The API validates access to the account and category before the PostgreSQL operation.',stages:[0,1,2,3]},
+  {title:'401 + concurrent refresh',path:'iOS → Session ↔ API → iOS',text:'After a 401, AuthenticationSession coordinates one refresh across concurrent requests. The client retries the request once; when needed, it invalidates the session and requests reauthentication.',stages:[0,1,2]},
+  {title:'Retry with idempotency',path:'iOS → Session → API → Database',text:'A retry preserves the payload and the same operation’s idempotency key. The API validates ownership; PostgreSQL keeps the write and idempotency result within the same transaction.',stages:[0,1,2,3]},
+];
+const units = [
+  [pt ? 'Cliente iOS' : 'iOS client','SwiftUI',pt ? 'Interface e estados da operação' : 'Interface and operation states'],
+  ['AuthenticationSession','Networking / Keychain',pt ? 'Sessão, credenciais e refresh' : 'Session, credentials, and refresh'],
+  ['API NestJS',pt ? 'Autenticação / validação' : 'Authentication / validation',pt ? 'Ownership de conta e categoria' : 'Account and category ownership'],
+  ['PostgreSQL',pt ? 'Consistência / idempotência' : 'Consistency / idempotency',pt ? 'Gravação e resultado atômicos' : 'Atomic write and result'],
+];
+---
+<article class="fintech" id="fintech" aria-labelledby="fintech-heading">
+  <div class="intro grid">
+    <div class="title"><p class="project-kind">{p.kind}</p><h3 class="project-title" id="fintech-heading">Fintech</h3><p class="project-summary">{p.summary}</p></div>
+    <div class="description"><p>{p.contribution}</p><ProjectLinks project={project} locale={locale}/></div>
+  </div>
+  <div class="flow" data-flow>
+    <fieldset hidden data-controls>
+      <legend>{pt ? 'Explore o fluxo' : 'Explore the flow'}</legend>
+      <div class="scenario-controls">
+        {scenarios.map((scenario,index) => <label><input type="radio" name="scenario" value={index} checked={index === 0} aria-controls={`scenario-${index}`}/><span>{scenario.title}</span></label>)}
+      </div>
+    </fieldset>
+    <ol class="units" aria-label={pt ? 'Arquitetura da implementação' : 'Implementation architecture'}>
+      {units.map((unit,index) => <li data-unit={index}><span class="stage-number" aria-hidden="true">{index+1}</span><h4>{index === 1 ? <>Authentication<wbr/>Session</> : unit[0]}</h4><p>{unit[1]}</p><div class="caption"><strong>{unit[2]}</strong><span data-stage-status data-active-label={pt ? 'No percurso selecionado' : 'On the selected path'} data-inactive-label={pt ? 'Fora deste percurso' : 'Outside this path'}></span></div></li>)}
+    </ol>
+    <div class="explanations" aria-live="polite" aria-atomic="true">
+      {scenarios.map((scenario,index) => <section id={`scenario-${index}`} data-scenario data-stages={scenario.stages.join(',')} aria-labelledby={`scenario-title-${index}`}><h4 id={`scenario-title-${index}`}>{scenario.title}</h4><p class="path">{scenario.path}</p><p>{scenario.text}</p></section>)}
+    </div>
+    <p class="note">{p.note}</p>
+  </div>
+</article>
+<script>
+  const flow = document.querySelector<HTMLElement>('[data-flow]');
+  if (flow) {
+    const panels = Array.from(flow.querySelectorAll<HTMLElement>('[data-scenario]'));
+    const units = Array.from(flow.querySelectorAll<HTMLElement>('[data-unit]'));
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let animations: Animation[] = [];
+    function select(index: number, animate = true) {
+      const panel = panels[index];
+      if (!panel) return;
+      animations.forEach(animation => animation.cancel());
+      animations = [];
+      panels.forEach((item,i) => { item.hidden = i !== index; });
+      const active = panel.dataset.stages?.split(',').map(Number) ?? [];
+      units.forEach((unit,i) => {
+        const selected = active.includes(i);
+        unit.dataset.active = String(selected);
+        const status = unit.querySelector<HTMLElement>('[data-stage-status]');
+        if (status) status.textContent = selected ? status.dataset.activeLabel ?? '' : status.dataset.inactiveLabel ?? '';
+        if (selected && animate && !reducedMotion.matches) {
+          animations.push(unit.animate([{outlineOffset:'4px',outlineColor:'transparent'},{outlineOffset:'0px',outlineColor:'var(--interaction)'}], {duration:300,delay:active.indexOf(i)*70,easing:'ease-out'}));
+        }
+      });
+    }
+    flow.querySelector<HTMLElement>('[data-controls]')?.removeAttribute('hidden');
+    flow.querySelectorAll<HTMLInputElement>('input[name="scenario"]').forEach(input => input.addEventListener('change', () => select(Number(input.value))));
+    reducedMotion.addEventListener('change', () => { if (reducedMotion.matches) animations.forEach(animation => animation.cancel()); });
+    select(0, false);
+  }
+</script>
+<style>
+  .fintech{margin-top:96px;padding-top:96px;border-top:1px solid var(--divider)}
+  .title{grid-column:1/6}.description{grid-column:7/-1;padding-top:8px}
+  .flow{margin-top:48px}
+  fieldset{border:0;padding:0;margin:0 0 32px;min-width:0}
+  legend{font-weight:600;font-size:16px;margin-bottom:16px}
+  .scenario-controls{display:flex;flex-wrap:wrap;gap:12px}
+  label{position:relative;display:flex;align-items:center;gap:8px;border:1px solid var(--divider);border-radius:8px;padding:12px 16px;min-height:48px;background:var(--surface);cursor:pointer;font-size:16px}
+  label:has(:checked){border-color:var(--interaction);box-shadow:inset 0 0 0 1px var(--interaction)}
+  label:has(:focus-visible){outline:3px solid var(--interaction);outline-offset:4px}
+  input{margin:0;accent-color:var(--interaction);width:16px;height:16px}
+  .units{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:32px}
+  li{position:relative;min-width:0;border-top:2px solid var(--divider);padding:24px 8px 16px 0;outline:1px solid transparent;outline-offset:0}
+  li[data-active=true]{border-top-color:var(--interaction)}
+  li[data-active=false]{border-top-style:dashed}
+  li:not(:last-child):after{content:'→';position:absolute;right:-23px;top:26px;font-size:22px;color:var(--secondary)}
+  .stage-number{font-size:16px;color:var(--secondary)}
+  h4{margin:8px 0;font-size:21px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+  li>p{font-size:16px;color:var(--secondary)}
+  .caption{margin-top:24px}.caption strong{font-weight:400}.caption span{font-size:14px;min-height:21px}
+  .explanations{border-top:1px solid var(--divider);margin-top:24px;padding-top:24px;max-width:80ch}
+  .explanations section+section{margin-top:24px}
+  .explanations h4{margin-top:0;font-size:20px}
+  .path{font-size:16px;color:var(--interaction);margin-bottom:12px;overflow-wrap:anywhere}
+  .note{margin-top:24px}
+  @media(min-width:600px) and (max-width:1023px){.title{grid-column:1/5}.description{grid-column:5/-1}.units{gap:24px}h4{font-size:18px}.units li:not(:last-child):after{right:-19px}}
+  @media(max-width:767px){.fintech{margin-top:64px;padding-top:64px}.title,.description{grid-column:1/-1}.description{margin-top:8px}.flow{margin-top:32px}.scenario-controls{flex-direction:column}.units{grid-template-columns:1fr;gap:24px}li{padding:16px 0 24px;display:grid;grid-template-columns:24px 1fr;column-gap:16px}.stage-number{grid-column:1;grid-row:1/4;margin-top:4px}h4,li>p,.caption{grid-column:2}h4{margin-top:0}.caption{margin-top:16px}li:not(:last-child):after{content:'↓';top:auto;bottom:-23px;left:0;right:auto}.explanations{margin-top:32px}}
+</style>

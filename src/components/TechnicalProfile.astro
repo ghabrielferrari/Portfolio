@@ -1,0 +1,24 @@
+---
+import { copy, type Locale } from '../i18n';
+interface Props { locale: Locale }
+const c = copy[Astro.props.locale];
+---
+<section class="section container" id="technical" aria-labelledby="technical-heading">
+  <div class="section-heading"><h2 id="technical-heading">{c.technical}</h2><p>{c.technicalLead}</p></div>
+  <div class="grid profile">
+    <article class="ios"><h3>{c.ios}</h3><p class="technologies">Swift, SwiftUI</p><div class="caption"><strong>{c.iosEvidence}</strong><span><a href="#carely">Carely</a>, <a href="#fintech">Fintech</a>, <a href="#jordania">Jordania</a></span></div></article>
+    <article class="backend"><h3>{c.backend}</h3><p class="technologies">TypeScript, NestJS, Java, Spring Boot, REST APIs, PostgreSQL</p><div class="caption"><strong>{c.backendEvidence}</strong><span><a href="#fintech">Fintech</a>, <a href="#jordania">Jordania</a></span></div></article>
+    <article class="web"><h3>{c.web}</h3><p class="technologies">Astro, TypeScript, HTML, CSS</p><div class="caption"><strong>{c.webEvidence}</strong><span><a href="#hero">{c.portfolio}</a></span></div></article>
+  </div>
+</section>
+<style>
+  .ios{grid-column:1/7;padding-right:48px}.backend{grid-column:7/10}.web{grid-column:10/-1}
+  article{border-top:1px solid var(--divider);padding-top:24px;min-width:0}
+  h3{font-size:24px;line-height:1.2}
+  .ios h3{font-size:40px;letter-spacing:-.03em}
+  .technologies{margin-top:24px;color:var(--secondary)}
+  .ios .technologies{font-size:28px;color:var(--text)}
+  .caption{margin-top:32px}.caption strong{font-weight:400}.caption a{display:inline-flex;align-items:center;min-height:44px}
+  @media(min-width:600px) and (max-width:1023px){.ios{grid-column:1/5;padding-right:24px}.backend{grid-column:5/7}.web{grid-column:7/-1}h3{font-size:21px}.ios h3{font-size:32px}}
+  @media(max-width:599px){.profile{gap:32px}.ios,.backend,.web{grid-column:1/-1;padding-right:0}.ios h3{font-size:32px}.technologies{margin-top:16px}.caption{margin-top:24px}}
+</style>

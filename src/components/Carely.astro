@@ -1,0 +1,85 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { copy, type Locale } from '../i18n';
+import Screen from './Screen.astro';
+import ProjectLinks from './ProjectLinks.astro';
+interface Props { project: CollectionEntry<'projects'>; locale: Locale }
+const { project, locale } = Astro.props;
+const p = project.data[locale];
+const c = copy[locale];
+---
+<article class="carely grid" id="carely" aria-labelledby="carely-heading">
+  <div class="intro">
+    <p class="project-kind">{p.kind}</p>
+    <h3 class="project-title" id="carely-heading">Carely</h3>
+    <p class="project-summary">{p.summary}</p>
+    <dl>
+      <div><dt>{c.contribution}</dt><dd>{p.contribution}</dd></div>
+      <div><dt>{c.technology}</dt><dd>{project.data.technologies.join(', ')}</dd></div>
+    </dl>
+    <ProjectLinks project={project} locale={locale} />
+  </div>
+  <div class="evidence">
+    <div class="screens">
+      {project.data.images.filter(i => !i.secondary).map((image,index) => <Screen image={image} locale={locale} index={index} />)}
+    </div>
+    <details>
+      <summary>{c.institutions}</summary>
+      <div class="institutions">
+        {project.data.images.filter(i => i.secondary).map((image,index) => <Screen image={image} locale={locale} index={index+3} />)}
+      </div>
+    </details>
+    <p class="note">{p.note}</p>
+  </div>
+</article>
+<dialog id="image-dialog" aria-labelledby="image-title">
+  <div class="dialog-heading"><h2 id="image-title"></h2><form method="dialog"><button class="button" autofocus>{c.close}</button></form></div>
+  <img id="image-expanded" alt="" width="738" height="1600" />
+</dialog>
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('#image-dialog');
+  const image = document.querySelector<HTMLImageElement>('#image-expanded');
+  const title = document.querySelector<HTMLElement>('#image-title');
+  let trigger: HTMLAnchorElement | null = null;
+  if (dialog && image && title && typeof dialog.showModal === 'function') {
+    document.querySelectorAll<HTMLAnchorElement>('[data-enlarge]').forEach(link => {
+      link.setAttribute('aria-haspopup', 'dialog');
+      link.addEventListener('click', event => {
+        if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        trigger = link;
+        image.src = link.href;
+        image.alt = link.querySelector('img')?.alt ?? '';
+        title.textContent = link.dataset.title ?? '';
+        dialog.showModal();
+        dialog.scrollTop = 0;
+      });
+    });
+    dialog.addEventListener('close', () => trigger?.focus({ preventScroll: true }));
+    dialog.addEventListener('click', event => {
+      if (event.target !== dialog) return;
+      const rect = dialog.getBoundingClientRect();
+      if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
+    });
+  }
+</script>
+<style>
+  .intro{grid-column:1/5}
+  dl{margin-top:32px;display:grid;gap:24px}
+  dt{font-weight:600;margin-bottom:8px;font-size:16px}
+  dd{font-size:18px;line-height:1.5;max-width:36ch;color:var(--secondary)}
+  .evidence{grid-column:5/-1;min-width:0}
+  .screens{display:grid;grid-template-columns:1.16fr 1fr .92fr;gap:24px;align-items:start}
+  details{margin-top:48px;border-block:1px solid var(--divider);padding-block:8px}
+  summary{font-size:16px;min-height:44px;padding-block:10px;color:var(--interaction)}
+  .institutions{display:grid;grid-template-columns:repeat(2,minmax(0,240px));gap:32px;justify-content:center;margin-block:24px}
+  .note{margin-top:16px}
+  dialog{background:var(--surface);color:var(--text);width:min(850px,calc(100% - 32px));max-height:90dvh;border:1px solid var(--divider);border-radius:12px;padding:16px;overscroll-behavior:contain}
+  dialog::backdrop{background:#000b}
+  .dialog-heading{position:sticky;top:0;z-index:1;display:flex;gap:16px;align-items:center;justify-content:space-between;padding-bottom:16px;background:var(--surface)}
+  .dialog-heading h2{font-size:20px}
+  .dialog-heading button{background:var(--surface);color:var(--text);padding:12px}
+  #image-expanded{width:100%;height:auto;border-radius:8px}
+  @media(min-width:600px) and (max-width:1023px){.intro{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;column-gap:32px}.intro>p,.intro>h3{grid-column:1}.intro dl{grid-column:2;grid-row:1/5;margin-top:0}.evidence{grid-column:1/-1;margin-top:24px}.screens{max-width:800px;margin-inline:auto}}
+  @media(max-width:599px){.intro,.evidence{grid-column:1/-1}.evidence{margin-top:24px}.screens{display:flex;flex-direction:column;gap:48px}.institutions{display:flex;flex-direction:column;gap:32px}details{margin-top:32px}.dialog-heading{align-items:start}.dialog-heading button{font-size:16px}}
+</style>

@@ -1,0 +1,60 @@
+---
+import '../styles/global.css';
+import sourceFont from '../assets/fonts/source-sans-3-latin.woff2?url';
+import displayFont from '../assets/fonts/bricolage-grotesque-latin-600.woff2?url';
+import { copy, base, type Locale } from '../i18n';
+interface Props { locale?: Locale }
+const { locale } = Astro.props;
+const c = copy[locale ?? 'en'];
+const canonical = new URL(`${base}${locale ? `${locale}/` : ''}`, Astro.site);
+---
+<!doctype html>
+<html lang={locale === 'pt' ? 'pt-BR' : 'en'}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    <title>{locale ? c.title : 'Gabriel Ferrari — PT / EN'}</title>
+    <meta name="description" content={c.description} />
+    <meta property="og:title" content={c.title} />
+    <meta property="og:description" content={c.description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={locale === 'pt' ? 'pt_BR' : 'en_US'} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="pt-BR" href={new URL(`${base}pt/`, Astro.site)} />
+    <link rel="alternate" hreflang="en" href={new URL(`${base}en/`, Astro.site)} />
+    <link rel="alternate" hreflang="x-default" href={new URL(base, Astro.site)} />
+    <link rel="preload" href={sourceFont} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={displayFont} as="font" type="font/woff2" crossorigin />
+  </head>
+  <body data-language-entry={locale ? undefined : ''}>
+    <slot />
+    <script>
+      const languages = ['pt', 'en'];
+      document.querySelectorAll<HTMLAnchorElement>('[data-language]').forEach(link => {
+        link.addEventListener('click', () => {
+          const language = link.dataset.language;
+          if (!language || !languages.includes(language)) return;
+          try { localStorage.setItem('portfolio.language', language); } catch { /* Navigation works without storage. */ }
+          if (location.hash) {
+            const destination = new URL(link.href);
+            destination.hash = location.hash;
+            link.href = destination.href;
+          }
+        });
+      });
+      if (document.body.hasAttribute('data-language-entry')) {
+        let language: string | null = null;
+        try { language = localStorage.getItem('portfolio.language'); } catch { /* Use browser language. */ }
+        if (!language || !languages.includes(language)) {
+          language = /^pt(?:-|$)/i.test(navigator.languages[0] || navigator.language) ? 'pt' : 'en';
+        }
+        const destination = new URL(`${import.meta.env.BASE_URL}${language}/`, location.origin);
+        destination.hash = location.hash;
+        location.replace(destination.href);
+      }
+    </script>
+  </body>
+</html>
