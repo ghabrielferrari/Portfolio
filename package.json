@@ -1,27 +1,22 @@
 {
-  "name": "gabriel-ferrari-portfolio",
+  "name": "gabriel-ferrari-portfolio-experiment",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "astro dev --host 127.0.0.1",
-    "check": "astro check",
+    "dev": "astro dev --host 127.0.0.1 --port 4330",
     "build": "astro build",
-    "preview": "astro preview --host 127.0.0.1 --port 4321",
-    "test": "playwright test"
+    "preview": "astro preview --host 127.0.0.1 --port 4330",
+    "check": "astro check",
+    "test": "node scripts/check-flow.ts && node scripts/check-site.mjs"
   },
   "dependencies": {
-    "@astrojs/react": "7.0.0",
-    "astro": "7.3.5",
-    "motion": "13.5.0",
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "astro": "7.3.5"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.9",
+    "@astrojs/check": "0.9.9",
     "@playwright/test": "^1.58.2",
-    "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0",
-    "lighthouse": "^13.0.3",
-    "typescript": "^5.9.3"
+    "@types/node": "^26.6.3",
+    "axe-core": "^4.11.1",
+    "typescript": "5.9.3"
   }
 }

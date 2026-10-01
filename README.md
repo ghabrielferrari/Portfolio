@@ -1,74 +1,43 @@
-# Gabriel Ferrari — Portfolio
+# Gabriel Ferrari — Portfolio experiment
 
-Home bilíngue em Astro, TypeScript strict e CSS próprio. Output estático, sem React, Motion, MDX ou scripts de terceiros. Este é o Checkpoint 2 local; não foi publicado.
+A bilingual, static portfolio built with Astro, CSS and native TypeScript. No React, animation library, backend or contact form.
 
-## Desenvolvimento e validação
-
-Use Node.js 24 LTS ou versão compatível com o Astro instalado.
+## Run
 
 ```sh
 npm ci
 npm run dev
-npm run check
-npm run build
-npx playwright install chromium webkit
-npm test
-npm run preview
 ```
 
-Preview: `http://127.0.0.1:4321/Portfolio/pt/` e `/Portfolio/en/`.
-
-## Estrutura
-
-- `src/pages/index.astro`: entrada de idioma; links PT/EN funcionam sem JavaScript.
-- `src/pages/[locale]/index.astro`: gera somente as homes PT e EN.
-- `src/layouts/Layout.astro`: metadata, canonical/hreflang, fontes e preferência de idioma.
-- `src/components/`: Hero, Carely, Fintech, Jordania, perfil técnico e demais seções.
-- `src/content.config.ts` e `src/content/projects/*.md`: uma Content Collection com schema tipado; identidade, tecnologias, links e limites compartilhados; copy e legendas separados por idioma.
-- `src/i18n.ts`: textos gerais PT/EN.
-- `src/styles/global.css`: tokens e fundamentos; componentes usam scoped styles.
-- `src/assets/`: fotografias/screenshots originais e fontes locais, processados pelo Astro/Vite.
-- `public/assets/documents/`: CV em português. Não existe CV inglês.
-- `public/assets/fonts/`: licenças OFL.
-- `images/`: assets originais da primeira versão, preservados; não entram no build.
-- `tests/home.spec.ts`: validação essencial em Chromium e WebKit.
-
-## Interações
-
-Carely: links para screenshots viram ampliação em `<dialog>` nativo. Escape, fechamento e restauração de foco; `<details>` expande somente as duas capturas secundárias. Sem JS, links abrem as imagens e a expansão continua nativa.
-
-Fintech: radios nativos e TypeScript local selecionam três cenários. Explicação e percurso atualizam imediatamente; a seleção cancela a progressão anterior. Motion finito de até 510 ms; reduced motion usa estado final. Sem JS, as três explicações ficam visíveis. Não há requests para as APIs dos projetos.
-
-Idioma: escolha manual tem prioridade; somente a raiz redireciona. Rotas localizadas nunca redirecionam automaticamente. Storage indisponível não impede navegação.
-
-## GitHub Pages
-
-`site: https://ghabrielferrari.github.io`, `base: /Portfolio/`, trailing slash, output estático em `dist/`. Acesso direto e reload usam arquivos `index.html` por rota.
-
-`ci.yml` executa type-check, build e testes. `deploy.yml` está preparado com **gatilho exclusivamente manual**. Nenhum workflow foi disparado e nenhuma configuração remota foi alterada. No checkpoint de publicação, configurar Pages para GitHub Actions e executar o deploy somente após aprovação.
-
-## Evidências e performance
-
-Veja `review/validation.md`, `review/links.json` e `review/lighthouse/`. Medição diagnóstica mobile a 390×844, throttling padrão do Lighthouse, Chromium local e cache limpo. Não representa mediana de Release Candidate nem performance publicada.
-
-Para repetir um diagnóstico autorizado, crie `review/lighthouse/` e execute:
+Portuguese: `http://127.0.0.1:4330/pt/`. English: `http://127.0.0.1:4330/en/`. The root route also renders Portuguese. Language selection keeps the equivalent section and the selected theme.
 
 ```sh
-node scripts/lighthouse.mjs http://127.0.0.1:4321/Portfolio/pt/ current
+npm run check
+npm run build
+npm run preview
+npm test
 ```
 
-## Limites factuais
+The browser check expects a running local server. Override with `BASE_URL=http://127.0.0.1:4331 npm test`. It uses an installed Brave browser when available, or Playwright Chromium; set `BROWSER_PATH` to another Chromium executable or run `npx playwright install chromium`. `CAPTURE=0 npm test` skips screenshots on repeat checks.
 
-Carely: cinco capturas próprias de desenvolvimento com dados demonstrativos. A revisão da build atual da App Store não foi confirmada. Não há claim de envio efetivo das candidaturas à instituição.
+## Edit
 
-Fintech: projeto pessoal integralmente desenvolvido por Gabriel; diagrama de implementação, sem execução real ou claim de validação em produção.
+- `src/data/content.ts`: PT/EN copy and public destinations.
+- `src/components/Home.astro`: page composition, project evidence, profile and contact.
+- `src/styles/global.css`: themes, typography, responsive layouts and motion.
+- `src/scripts/site.ts`: theme, language context, screenshot dialog and one-time reveals.
+- `src/components/FintechFlow.astro` and `src/data/flow.ts`: explanatory scenarios with finite playback and manual navigation.
+- `public/media/`: optimized real photography and development captures.
+- `public/documents/`: the original Portuguese DOCX supplied by Gabriel.
 
-Jordania: contribuição em frontend/iOS, sessão, autenticação e integração Java/Spring. Providers Apple/Google reais funcionaram durante o desenvolvimento. Outros módulos do backend da equipe não são atribuídos a Gabriel.
+## Evidence boundaries
 
-Casos completos ficam para o Checkpoint 3. Futuras rotas: `/Portfolio/pt/projetos/<slug>/` e `/Portfolio/en/work/<slug>/`, com `carely`, `fintech`, `jordania`; nenhuma rota ou link de case foi criado antecipadamente.
+Carely is a team project published on the App Store. Its screenshots show development/demo data; they do not establish the exact current App Store build, application delivery or institution receipt. The detail and confirmation captures were reused from the existing local Portfolio assets. The confirmation screen is a pre-submission modal.
 
-## Fontes e assets
+Fintech is Gabriel’s personal project and remains in development. The diagram illustrates implementation concepts and makes no API requests. Idempotency does not imply global exactly-once execution.
 
-Source Sans 3: arquivo local já validado na baseline. Bricolage Grotesque: um WOFF2 latino, peso 600, optical sizing variável; ambos SIL OFL. O subset cobre os caracteres PT/EN usados. Fontes preloaded, fallback com métricas ajustadas, dimensões de imagem reservadas e WebP responsivo via `astro:assets`.
+Jordania is a team project. The described contribution concerns iOS, authentication/session infrastructure and Java/Spring authentication routes. Apple Developer Academy is education. English uses Contact as the secondary hero action because no English CV was supplied.
 
-Referências de implementação: [Content Collections](https://docs.astro.build/en/guides/content-collections/) e [GitHub Pages](https://docs.astro.build/en/guides/deploy/github/), documentação oficial Astro.
+The portrait and additional Carely captures come from the user-supplied local files. Font licenses are in `public/fonts/`. No deployment domain is assumed and no publishing workflow is configured.
+
+When a hosting domain is chosen, build with `PUBLIC_SITE_URL=https://your-domain.example npm run build` to generate absolute canonical and alternate-language metadata.

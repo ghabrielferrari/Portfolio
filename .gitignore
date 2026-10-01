@@ -1,9 +1,5 @@
 node_modules/
 dist/
 .astro/
-playwright-report/
-test-results/
-.DS_Store
-
-# Local review evidence and reversible legacy archive.
-/review/
+review/*.png
+review/*.json

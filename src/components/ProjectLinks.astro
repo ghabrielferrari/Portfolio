@@ -1,9 +1,0 @@
----
-import type { CollectionEntry } from 'astro:content';
-import type { Locale } from '../i18n';
-interface Props { project: CollectionEntry<'projects'>; locale: Locale }
-const { project, locale } = Astro.props;
----
-<div class="project-links">
-  {project.data.links.map(link => <a href={link.url}>{link[locale]}</a>)}
-</div>

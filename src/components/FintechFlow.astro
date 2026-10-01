@@ -1,0 +1,350 @@
+---
+import { flowScenarios, type Locale } from '../data/flow';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const copy = {
+  pt: {
+    title: 'Da interface à consistência dos dados.',
+    subtitle: 'Explore três caminhos da mesma arquitetura.',
+    diagram: 'Arquitetura: iOS, AuthenticationSession e networking, API NestJS e PostgreSQL. O Keychain se conecta à sessão.',
+    scenarios: 'Escolha um cenário', steps: 'Etapas do cenário',
+    interface: 'Interface e estado', session: 'Sessão e networking', api: 'Autenticação e operações', database: 'Persistência e consistência', keychain: 'Credenciais',
+    step: 'Etapa', of: 'de', previous: 'Etapa anterior', next: 'Próxima etapa', replay: 'Reproduzir cenário', pause: 'Pausar',
+    note: 'Diagrama explicativo da implementação. A interação ilustra o fluxo; não executa requisições reais.',
+  },
+  en: {
+    title: 'From interface to data consistency.',
+    subtitle: 'Explore three paths through the same architecture.',
+    diagram: 'Architecture: iOS, AuthenticationSession and networking, NestJS API and PostgreSQL. Keychain connects to the session.',
+    scenarios: 'Choose a scenario', steps: 'Scenario steps',
+    interface: 'Interface and state', session: 'Session and networking', api: 'Authentication and operations', database: 'Persistence and consistency', keychain: 'Credentials',
+    step: 'Step', of: 'of', previous: 'Previous step', next: 'Next step', replay: 'Play scenario', pause: 'Pause',
+    note: 'An explanatory implementation diagram. The interaction illustrates the flow; it does not execute real requests.',
+  },
+}[locale];
+const first = flowScenarios[0];
+const wires = [
+  { id: 'client-session', path: 'M 135 117 H 346' },
+  { id: 'session-api', path: 'M 434 117 H 644' },
+  { id: 'api-database', path: 'M 716 117 H 875' },
+  { id: 'keychain-session', path: 'M 390 235 V 163' },
+];
+---
+
+<div class="flow" data-fintech-flow data-locale={locale}>
+  <div class="flow-intro">
+    <p class="flow-title">{copy.title}</p>
+    <p class="flow-subtitle">{copy.subtitle}</p>
+  </div>
+
+  <div class="flow-scenarios" role="group" aria-label={copy.scenarios} hidden>
+    {flowScenarios.map((scenario, index) => (
+      <button type="button" data-scenario={scenario.id} aria-pressed={index === 0}>
+        <span class="scenario-dot" aria-hidden="true"></span>{scenario.title[locale]}
+      </button>
+    ))}
+  </div>
+
+  <div class="flow-map" role="group" aria-label={copy.diagram}>
+    <svg class="flow-wires" viewBox="0 0 1000 330" preserveAspectRatio="none" aria-hidden="true">
+      {wires.map((wire) => <path class="wire" d={wire.path} />)}
+      {wires.map((wire) => <path class="signal" data-link={wire.id} d={wire.path} pathLength="1" />)}
+    </svg>
+
+    <div class="flow-node node-ios" data-node="ios" data-active="true">
+      <div class="node-icon icon-ios" aria-hidden="true">
+        <svg viewBox="0 0 40 48"><rect x="10" y="3" width="21" height="42" rx="6"/><path d="M17 8h7M18 39h5"/></svg>
+      </div>
+      <strong>iOS</strong><span>{copy.interface}</span>
+    </div>
+
+    <div class="flow-node node-session" data-node="session">
+      <div class="node-icon icon-session" aria-hidden="true">
+        <svg viewBox="0 0 48 48"><path d="M11 17h26l-5-5M37 31H11l5 5M37 17l-5 5M11 31l5-5"/><circle cx="24" cy="24" r="20"/></svg>
+      </div>
+      <strong>AuthenticationSession</strong><span>{copy.session}</span>
+    </div>
+
+    <div class="flow-node node-api" data-node="api">
+      <div class="node-icon icon-api" aria-hidden="true">
+        <svg viewBox="0 0 48 48"><path d="M17 8h-4v12l-4 4 4 4v12h4M31 8h4v12l4 4-4 4v12h-4M22 18h4M22 24h4M22 30h4"/></svg>
+      </div>
+      <strong>NestJS API</strong><span>{copy.api}</span>
+    </div>
+
+    <div class="flow-node node-database" data-node="database">
+      <div class="node-icon icon-database" aria-hidden="true">
+        <svg viewBox="0 0 48 48"><ellipse cx="24" cy="11" rx="14" ry="6"/><path d="M10 11v25c0 3.3 6.3 6 14 6s14-2.7 14-6V11M10 23c0 3.3 6.3 6 14 6s14-2.7 14-6"/></svg>
+      </div>
+      <strong>PostgreSQL</strong><span>{copy.database}</span>
+    </div>
+
+    <div class="flow-node node-keychain" data-node="keychain">
+      <div class="node-icon icon-keychain" aria-hidden="true">
+        <svg viewBox="0 0 40 40"><circle cx="13" cy="15" r="7"/><path d="m18 20 14 14M26 28l4-4M30 32l4-4"/></svg>
+      </div>
+      <div><strong>Keychain</strong><span>{copy.keychain}</span></div>
+    </div>
+  </div>
+
+  <div class="flow-detail">
+    <div class="step-copy" aria-live="polite" aria-atomic="true">
+      <p class="step-meta"><span data-step-count>{copy.step} 1 {copy.of} {first.steps.length}</span><span data-step-badge>{first.steps[0].badge}</span></p>
+      <h4 data-step-title>{first.steps[0].title[locale]}</h4>
+      <p data-step-description>{first.steps[0].description[locale]}</p>
+    </div>
+    <div class="flow-controls" hidden>
+      <button type="button" class="flow-replay" data-replay>
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 9 6-9 6Z"/></svg>
+        <span data-replay-label>{copy.replay}</span>
+      </button>
+      <div class="flow-navigation">
+        <button type="button" data-previous aria-label={copy.previous} disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12 5-5 5 5 5"/></svg></button>
+        <button type="button" data-next aria-label={copy.next}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m8 5 5 5-5 5"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="flow-steps" aria-label={copy.steps} hidden></nav>
+  <p class="flow-insight" data-insight>{first.insight[locale]}</p>
+  <ol class="flow-static">
+    {first.steps.map((step) => <li><strong>{step.title[locale]}</strong><p>{step.description[locale]}</p></li>)}
+  </ol>
+  <p class="flow-note">{copy.note}</p>
+</div>
+
+<script>
+  import { flowScenarios, normalizeStep, type Locale } from '../data/flow';
+
+  function initializeFlows() {
+    document.querySelectorAll<HTMLElement>('[data-fintech-flow]').forEach((root) => {
+      if (root.dataset.enhanced) return;
+      root.dataset.enhanced = 'true';
+      const locale: Locale = root.dataset.locale === 'en' ? 'en' : 'pt';
+      const words = locale === 'pt'
+        ? { step: 'Etapa', of: 'de', replay: 'Reproduzir cenário', pause: 'Pausar' }
+        : { step: 'Step', of: 'of', replay: 'Play scenario', pause: 'Pause' };
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const selectors = root.querySelectorAll<HTMLButtonElement>('[data-scenario]');
+      const stepNav = root.querySelector<HTMLElement>('.flow-steps')!;
+      const previous = root.querySelector<HTMLButtonElement>('[data-previous]')!;
+      const next = root.querySelector<HTMLButtonElement>('[data-next]')!;
+      const replay = root.querySelector<HTMLButtonElement>('[data-replay]')!;
+      let scenario = flowScenarios[0];
+      let index = 0;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      let playing = false;
+
+      root.querySelectorAll<HTMLElement>('[hidden]').forEach((element) => { element.hidden = false; });
+      root.querySelector<HTMLElement>('.flow-static')!.hidden = true;
+
+      function playLabel() {
+        root.dataset.playing = String(playing);
+        root.querySelector<HTMLElement>('[data-replay-label]')!.textContent = playing ? words.pause : words.replay;
+        replay.setAttribute('aria-label', playing ? words.pause : words.replay);
+      }
+
+      function stop() {
+        if (timer !== undefined) clearTimeout(timer);
+        timer = undefined;
+        playing = false;
+        playLabel();
+      }
+
+      function render(animate = true) {
+        index = normalizeStep(index, scenario.steps.length);
+        const step = scenario.steps[index];
+        root.getAnimations({ subtree: true }).forEach((animation) => animation.cancel());
+        root.querySelector<HTMLElement>('[data-step-count]')!.textContent = `${words.step} ${index + 1} ${words.of} ${scenario.steps.length}`;
+        root.querySelector<HTMLElement>('[data-step-badge]')!.textContent = step.badge;
+        root.querySelector<HTMLElement>('[data-step-title]')!.textContent = step.title[locale];
+        root.querySelector<HTMLElement>('[data-step-description]')!.textContent = step.description[locale];
+        root.querySelector<HTMLElement>('[data-insight]')!.textContent = scenario.insight[locale];
+        selectors.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.scenario === scenario.id)));
+        stepNav.querySelectorAll<HTMLButtonElement>('button').forEach((button, position) => {
+          if (position === index) button.setAttribute('aria-current', 'step');
+          else button.removeAttribute('aria-current');
+        });
+        previous.disabled = index === 0;
+        next.disabled = index === scenario.steps.length - 1;
+        root.querySelectorAll<HTMLElement>('[data-node]').forEach((node) => {
+          const active = step.nodes.some((name) => name === node.dataset.node);
+          node.dataset.active = String(active);
+          if (active && animate && !reducedMotion.matches) {
+            node.querySelector<HTMLElement>('.node-icon')!.animate(
+              [{ scale: 1 }, { scale: 1.09 }, { scale: 1 }],
+              { duration: 650, easing: 'cubic-bezier(.22, 1, .36, 1)' },
+            );
+          }
+        });
+        root.querySelectorAll<SVGPathElement>('[data-link]').forEach((path) => {
+          const active = step.links.some((name) => name === path.dataset.link);
+          const reverse = step.reverseLinks?.some((name) => name === path.dataset.link) ?? false;
+          path.dataset.active = String(active);
+          path.dataset.direction = reverse ? 'reverse' : 'forward';
+          if (active && animate && !reducedMotion.matches) {
+            path.animate([{ strokeDashoffset: reverse ? -1 : 1 }, { strokeDashoffset: 0 }], { duration: 850, easing: 'cubic-bezier(.22, 1, .36, 1)', fill: 'both' });
+          }
+        });
+      }
+
+      function buildSteps() {
+        stepNav.replaceChildren(...scenario.steps.map((step, position) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.setAttribute('aria-label', `${words.step} ${position + 1}: ${step.title[locale]}`);
+          const number = document.createElement('span');
+          number.className = 'step-number';
+          number.textContent = String(position + 1).padStart(2, '0');
+          const title = document.createElement('span');
+          title.textContent = step.title[locale];
+          button.append(number, title);
+          button.addEventListener('click', () => { stop(); index = position; render(); });
+          return button;
+        }));
+      }
+
+      function scheduleNext() {
+        if (index === scenario.steps.length - 1) { stop(); return; }
+        timer = setTimeout(() => {
+          index += 1;
+          render();
+          scheduleNext();
+        }, 2600);
+      }
+
+      selectors.forEach((button) => button.addEventListener('click', () => {
+        stop();
+        scenario = flowScenarios.find(({ id }) => id === button.dataset.scenario)!;
+        index = 0;
+        buildSteps();
+        render();
+      }));
+      previous.addEventListener('click', () => { stop(); index -= 1; render(); });
+      next.addEventListener('click', () => { stop(); index += 1; render(); });
+      replay.addEventListener('click', () => {
+        if (playing) { stop(); return; }
+        stop();
+        index = reducedMotion.matches ? scenario.steps.length - 1 : 0;
+        render();
+        if (!reducedMotion.matches) { playing = true; playLabel(); scheduleNext(); }
+      });
+      reducedMotion.addEventListener('change', () => { stop(); render(false); });
+      document.addEventListener('astro:before-swap', stop, { once: true });
+      buildSteps();
+      render(false);
+    });
+  }
+
+  initializeFlows();
+  document.addEventListener('astro:page-load', initializeFlows);
+</script>
+
+<style>
+  .flow { padding: clamp(1.2rem, 3.5vw, 3rem); border: 1px solid var(--line); border-radius: 1.75rem; background: var(--surface); color: var(--text); overflow: hidden; }
+  .flow-intro { display: flex; align-items: baseline; justify-content: space-between; gap: 1.5rem; }
+  .flow-title { margin: 0; font-family: var(--display); font-size: clamp(1.2rem, 2.2vw, 1.7rem); font-weight: 600; letter-spacing: -.035em; }
+  .flow-subtitle { margin: 0; color: var(--muted); font-size: .85rem; text-align: right; }
+  .flow-scenarios { display: flex; gap: .35rem; flex-wrap: wrap; margin-top: 1.75rem; padding: .35rem; width: fit-content; background: var(--bg); border: 1px solid var(--line); border-radius: .9rem; }
+  .flow :global(button) { font: inherit; color: inherit; cursor: pointer; }
+  .flow :global(button:focus-visible) { outline: 3px solid var(--accent); outline-offset: 4px; }
+  .flow-scenarios button { display: flex; gap: .55rem; align-items: center; min-height: 44px; padding: .6rem .9rem; border: 0; border-radius: .65rem; background: transparent; color: var(--muted); font-size: .82rem; transition: background 180ms, color 180ms, box-shadow 180ms; }
+  .flow-scenarios button[aria-pressed='true'] { background: var(--surface-raised); color: var(--text); box-shadow: 0 2px 6px #15348b0d; }
+  .scenario-dot { width: .4rem; height: .4rem; flex: 0 0 auto; border-radius: 50%; background: currentColor; opacity: .45; }
+  [aria-pressed='true'] .scenario-dot { background: var(--accent); opacity: 1; }
+  .flow-map { position: relative; height: 330px; margin: .5rem 0 .65rem; background: radial-gradient(ellipse at 39% 36%, var(--accent-soft), transparent 48%); }
+  .flow-wires { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .wire, .signal { fill: none; stroke: var(--line); stroke-width: 1.7; vector-effect: non-scaling-stroke; }
+  .signal { opacity: 0; stroke: var(--accent); stroke-width: 2.7; stroke-dasharray: 1; stroke-dashoffset: 0; }
+  .signal[data-active='true'] { opacity: 1; }
+  .flow-node { position: absolute; top: 89px; width: 19%; text-align: center; transform: translateX(-50%); }
+  .flow-node strong { display: block; margin-top: 1rem; font-size: .98rem; line-height: 1.2; letter-spacing: -.025em; }
+  .flow-node > span, .node-keychain span { display: block; margin-top: .4rem; font-size: .8125rem; color: var(--muted); line-height: 1.4; }
+  .node-icon { display: grid; place-items: center; margin: auto; width: 56px; height: 56px; color: var(--muted); background: var(--surface); transition: color 220ms, background 220ms, box-shadow 220ms; }
+  .node-icon svg { width: 37px; height: 37px; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; }
+  .node-ios { left: 10%; }
+  .icon-ios { border: 1px solid var(--line); border-radius: 16px; }
+  .icon-ios svg { height: 43px; width: 36px; }
+  .node-session { left: 39%; top: 81px; width: 29%; }
+  .icon-session { width: 72px; height: 72px; border: 1px solid var(--line); border-radius: 50%; }
+  .icon-session svg { width: 48px; height: 48px; }
+  .node-session strong { font-size: clamp(.87rem, 1.35vw, 1.1rem); }
+  .node-api { left: 68%; }
+  .icon-api { border-radius: 12px 24px 12px 24px; border: 1px solid var(--line); }
+  .node-database { left: 91%; width: 18%; }
+  .icon-database { background: var(--surface); border-radius: 50%; }
+  .icon-database svg { width: 46px; height: 46px; }
+  .node-keychain { left: 39%; top: 235px; display: flex; align-items: center; gap: .55rem; width: auto; min-width: 165px; padding: .6rem 1rem; text-align: left; background: var(--surface-raised); border: 1px solid var(--line); border-radius: 3rem; }
+  .node-keychain .node-icon { width: 32px; height: 32px; background: transparent; margin: 0; border-radius: 50%; }
+  .node-keychain svg { width: 30px; height: 30px; }
+  .node-keychain strong { margin: 0; font-size: .81rem; }
+  .node-keychain span { margin-top: .15rem; font-size: .68rem; }
+  .flow-node[data-active='true'] .node-icon { color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent-soft), transparent 55%); }
+  .node-keychain[data-active='true'] .node-icon { box-shadow: none; background: transparent; }
+  .flow-detail { display: grid; grid-template-columns: 1fr auto; gap: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); align-items: center; }
+  .step-meta { display: flex; gap: .8rem; align-items: center; flex-wrap: wrap; color: var(--muted); font-size: .75rem; margin: 0 0 .75rem; }
+  [data-step-badge] { color: var(--accent); background: var(--accent-soft); padding: .2rem .5rem; border-radius: .3rem; font-size: .69rem; }
+  .step-copy h4 { font-family: var(--display); font-size: clamp(1.2rem, 2vw, 1.5rem); font-weight: 600; letter-spacing: -.035em; margin: 0 0 .55rem; }
+  [data-step-description] { color: var(--muted); margin: 0; font-size: .9rem; line-height: 1.65; max-width: 60ch; min-height: 4.5em; }
+  .flow-controls { display: flex; flex-direction: column; gap: .65rem; align-items: stretch; }
+  .flow-replay { display: flex; justify-content: center; align-items: center; gap: .45rem; border: 1px solid var(--line); background: var(--surface-raised); border-radius: .6rem; min-height: 44px; padding: .65rem .85rem; font-size: .75rem !important; }
+  .flow-replay svg { width: 16px; height: 16px; fill: currentColor; }
+  .flow[data-playing='true'] .flow-replay { background: var(--accent-soft); color: var(--accent); }
+  .flow-navigation { display: flex; gap: .5rem; }
+  .flow-navigation button { flex: 1; display: grid; place-items: center; border: 1px solid var(--line); background: var(--surface-raised); min-height: 44px; border-radius: .6rem; }
+  .flow-navigation svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .flow :global(button:hover:not(:disabled)) { color: var(--accent); }
+  .flow :global(button:disabled) { opacity: .35; cursor: default; }
+  .flow-steps { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: .65rem; margin-top: 1.75rem; }
+  .flow-steps :global(button) { display: flex; flex-direction: column; gap: .5rem; text-align: left; border: 0; border-top: 2px solid var(--line); background: transparent; padding: .8rem .15rem .35rem; font-size: .8125rem; line-height: 1.45; min-height: 72px; color: var(--muted); transition: border-color 180ms, color 180ms; }
+  .flow-steps :global(button[aria-current='step']) { border-color: var(--accent); color: var(--text); }
+  .flow-steps :global(.step-number) { color: var(--accent); font-variant-numeric: tabular-nums; font-size: .7rem; border: 0; min-width: 0; height: auto; display: block; margin: 0; }
+  .flow-insight { margin: 1.75rem 0 0; padding: 1rem 0 1rem 1rem; border-left: 2px solid var(--accent); max-width: 85ch; color: var(--muted); font-size: .87rem; line-height: 1.7; }
+  .flow-note { color: var(--muted); font-size: .8125rem; line-height: 1.6; margin: 1.25rem 0 0; }
+  .flow-static { color: var(--muted); font-size: .9rem; line-height: 1.6; padding-left: 1.5rem; }
+  .flow-static li { margin-top: 1rem; }
+  .flow-static p { margin: .2rem 0; }
+  [hidden] { display: none !important; }
+  @media (max-width: 720px) {
+    .flow-intro { display: block; }
+    .flow-subtitle { margin-top: .6rem; text-align: left; }
+    .flow-scenarios { width: 100%; }
+    .flow-scenarios button { flex: 1 1 100%; justify-content: flex-start; font-size: .82rem; }
+    .flow-map { display: grid; grid-template-columns: 1fr auto; grid-template-areas: 'ios .' 'session keychain' 'api .' 'database .'; column-gap: .65rem; height: auto; padding: 1.75rem 0 .5rem; margin: 0; background: radial-gradient(ellipse at 30% 40%, var(--accent-soft), transparent 68%); }
+    .flow-wires { display: none; }
+    .flow-node { position: relative; top: auto; left: auto; transform: none; width: auto; display: grid; grid-template-columns: 52px 1fr; grid-template-rows: auto auto; column-gap: .85rem; text-align: left; padding-bottom: 2rem; }
+    .flow-node:not(.node-keychain)::after { content: ''; position: absolute; left: 25px; top: 53px; bottom: 1px; width: 1px; background: var(--line); }
+    .flow-node[data-active='true']::after { background: var(--accent); }
+    .node-database::after { display: none; }
+    .flow-node .node-icon { grid-column: 1; grid-row: 1 / 3; width: 52px; height: 52px; }
+    .flow-node strong { grid-column: 2; margin-top: .45rem; font-size: .92rem; align-self: end; overflow-wrap: anywhere; }
+    .flow-node > span { grid-column: 2; margin-top: .25rem; font-size: .72rem; }
+    .node-ios { grid-area: ios; }
+    .node-session { grid-area: session; }
+    .icon-session svg { width: 40px; height: 40px; }
+    .node-api { grid-area: api; }
+    .node-database { grid-area: database; padding-bottom: 1rem; }
+    .node-keychain { grid-area: keychain; display: flex; gap: .35rem; min-width: 0; width: auto; align-self: start; padding: .6rem; border-radius: .75rem; margin-top: .15rem; }
+    .node-keychain::before { content: ''; position: absolute; right: 100%; top: 25px; width: .7rem; height: 1px; background: var(--line); }
+    .node-keychain .node-icon { width: 25px; height: 25px; }
+    .node-keychain svg { width: 25px; height: 25px; }
+    .node-keychain strong { font-size: .72rem; margin: 0; }
+    .node-keychain span { font-size: .6rem; }
+    .flow-detail { grid-template-columns: 1fr; gap: 1rem; }
+    [data-step-description] { min-height: 5em; }
+    .flow-controls { flex-direction: row; }
+    .flow-replay { flex: 1; }
+    .flow-navigation { flex: 0 0 100px; }
+    .flow-steps { grid-auto-flow: row; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin-top: 1.25rem; }
+    .flow-insight { margin-top: 1.3rem; font-size: .83rem; }
+  }
+  @media (max-width: 560px) {
+    .flow-map { grid-template-columns: 1fr; grid-template-areas: 'ios' 'session' 'keychain' 'api' 'database'; }
+    .node-keychain { margin: -1.15rem 0 1rem 66px; width: fit-content; }
+    .node-keychain::before { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .flow *, .flow :global(button) { transition: none !important; }
+  }
+</style>

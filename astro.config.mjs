@@ -1,11 +1,8 @@
-import { defineConfig } from 'astro/config';
-import react from '@astrojs/react';
+import { defineConfig } from "astro/config";
 
 export default defineConfig({
-  site: 'https://ghabrielferrari.github.io',
-  base: '/Portfolio/',
-  output: 'static',
-  integrations: [react()],
-  trailingSlash: 'always',
-  build: { format: 'directory' },
+  site: process.env.PUBLIC_SITE_URL,
+  output: "static",
+  trailingSlash: "always",
+  devToolbar: { enabled: false },
 });

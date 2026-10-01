@@ -1,19 +1,4 @@
 {
   "extends": "astro/tsconfigs/strict",
-  "include": [
-    ".astro/types.d.ts",
-    "**/*"
-  ],
-  "exclude": [
-    "dist",
-    "review",
-    "node_modules",
-    "playwright-report",
-    "test-results"
-  ],
-  "compilerOptions": {
-    "noUncheckedIndexedAccess": true,
-    "jsx": "react-jsx",
-    "jsxImportSource": "react"
-  }
+  "compilerOptions": { "verbatimModuleSyntax": true }
 }

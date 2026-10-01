@@ -1,0 +1,8 @@
+---
+interface Props { title: string; items: string[][]; }
+const { title, items } = Astro.props;
+---
+<details class="case-notes">
+  <summary><span>{title}</span><span class="summary-plus" aria-hidden="true">+</span></summary>
+  <dl>{items.map(([label, text]) => <div><dt>{label}</dt><dd>{text}</dd></div>)}</dl>
+</details>

@@ -1,90 +1,120 @@
 ---
-import { getCollection } from 'astro:content';
-import { copy, type Locale } from '../i18n';
-import Header from './Header.astro';
-import Hero from './Hero.astro';
-import Carely from './Carely.astro';
-import Fintech from './Fintech.astro';
-import Jordania from './Jordania.astro';
-import TechnicalProfile from './TechnicalProfile.astro';
-interface Props { locale: Locale }
+import { content, links } from '../data/content';
+import CaseNotes from './CaseNotes.astro';
+import FintechFlow from './FintechFlow.astro';
+import '../styles/global.css';
+interface Props { locale: 'pt' | 'en'; }
 const { locale } = Astro.props;
-const c = copy[locale];
-const projects = await getCollection('projects');
-const carely = projects.find(p => p.data.id === 'carely');
-const fintech = projects.find(p => p.data.id === 'fintech');
-const jordania = projects.find(p => p.data.id === 'jordania');
-if (!carely || !fintech || !jordania) throw new Error('The three approved projects are required.');
+const t = content[locale];
+const screens = ['carely-search', 'carely-detail', 'carely-confirmation'];
+const sections = ['projects', 'profile', 'contact'];
 ---
-<Header locale={locale}/>
-<main id="main" tabindex="-1">
-  <Hero locale={locale}/>
-  <section class="section container" id="work" aria-labelledby="work-heading">
-    <div class="section-heading"><h2 id="work-heading">{c.workTitle}</h2><p>{c.workIntro}</p></div>
-    <Carely project={carely} locale={locale}/>
-    <Fintech project={fintech} locale={locale}/>
-    <Jordania project={jordania} locale={locale}/>
-  </section>
-  <TechnicalProfile locale={locale}/>
-  <section class="about section" id="about" aria-labelledby="about-heading">
-    <div class="container grid">
-      <h2 id="about-heading" class="motion-enter" data-motion="title">{c.about}</h2>
-      <div><p class="statement motion-enter" data-motion="statement">{c.aboutStatement}</p><p class="context">{c.aboutContext}</p></div>
-    </div>
-  </section>
-  <section class="section container grid education" id="education" aria-labelledby="education-heading">
-    <h2 id="education-heading" class="motion-enter" data-motion="content">{c.education}</h2>
-    <div class="education-list motion-enter" data-motion="content" style="--delay:70ms">
-      <article><div><h3>{c.degree}</h3><p>UNINTER</p></div><p class="note">{c.ongoing}</p></article>
-      <article><div><h3>Apple Developer Academy</h3><p>Instituto de Pesquisas Eldorado, Campinas</p></div><p class="note">2025–2026</p><p class="education-description">{c.academy}</p></article>
-    </div>
-  </section>
-  <section class="section container contact" id="contact" aria-labelledby="contact-heading">
-    <h2 id="contact-heading" class="motion-enter" data-motion="contact">{c.contactTitle}</h2>
-    <p>{c.contactIntro}</p>
-    <a class="email motion-enter" data-motion="content" style="--delay:80ms" href="mailto:ghcferrari75@gmail.com">ghcferrari75@gmail.com</a>
-    <nav class="project-links" aria-label={c.contact}>
-      <a href="https://github.com/ghabrielferrari">GitHub</a>
-      <a href="https://www.linkedin.com/in/ghabriel-ferrari/">LinkedIn</a>
-    </nav>
-  </section>
-</main>
-<footer class="container"><p>© 2026 Gabriel Ferrari</p><p>{c.location}</p></footer>
-<script>
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  if ('IntersectionObserver' in window) {
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        if (!reduced.matches) entry.target.classList.add('is-entering');
-        observer.unobserve(entry.target);
-      });
-    }, { threshold: 0.12 });
-    document.querySelectorAll('.motion-enter').forEach(element => observer.observe(element));
-    reduced.addEventListener('change', () => {
-      if (reduced.matches) document.querySelectorAll('.is-entering').forEach(element => element.classList.remove('is-entering'));
-    });
-  }
-</script>
-<style>
-
-  #work{padding-top:24px}
-  .about{background:var(--wash);padding-block:96px;position:relative;isolation:isolate}.about:before{content:"";position:absolute;right:0;top:0;width:24%;height:48px;background:var(--bg);clip-path:polygon(32px 0,100% 0,100% 100%,0 100%);z-index:-1}
-  .about h2,.education>h2{grid-column:1/4;font-size:28px;line-height:1.25}
-  .about .grid>div{grid-column:4/-1;display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:32px}
-  .statement{grid-column:1/-1;font-family:var(--display);font-size:clamp(32px,3.3vw,48px);line-height:1.2;letter-spacing:-.035em;max-width:30ch}
-  .context{grid-column:4/-1;color:var(--secondary);max-width:52ch;margin-top:8px}
-  .education-list{grid-column:4/-1;display:grid;grid-template-columns:1fr 1fr;gap:48px}
-  .education article{display:flex;align-content:start;flex-wrap:wrap;gap:16px;min-width:0}
-  .education article>div{flex-basis:100%}
-  .education h3{font-size:26px;line-height:1.3}.education article>div>p{color:var(--secondary);margin-top:8px}.education-description{flex-basis:100%;font-size:16px;color:var(--secondary)}
-  .contact{position:relative;isolation:isolate;padding-block:96px}
-  .contact:before{content:'';position:absolute;inset:48px calc((100vw - 100%)/-2) 0 36%;z-index:-1;background:var(--wash);clip-path:polygon(0 0,100% 0,100% 100%,16% 100%,16% 72%,0 72%);pointer-events:none}.contact:after{content:"";position:absolute;right:16px;top:24px;width:180px;height:144px;border-top:1px solid var(--interaction);border-right:1px solid var(--interaction);border-radius:0 48px 0 0;opacity:.45;pointer-events:none}
-  .contact h2{font-family:var(--display);font-size:clamp(64px,9vw,128px);letter-spacing:-.055em;line-height:1.05}
-  .contact>p{margin-top:32px;color:var(--secondary)}
-  .email{transition:text-decoration-color 240ms ease;display:inline-flex;align-items:center;min-height:48px;margin-top:32px;font-size:clamp(22px,3vw,36px);line-height:1.3;max-width:100%;overflow-wrap:anywhere}
-  footer{display:flex;justify-content:space-between;gap:16px;padding-block:32px;font-size:16px;color:var(--secondary)}
-  @media(min-width:600px) and (max-width:1023px){.about h2,.education>h2{grid-column:1/3}.about .grid>div,.education-list{grid-column:3/-1}.context{grid-column:2/-1}.education-list{gap:32px}}
-  @media(max-width:599px){#work{padding-top:24px}.about{padding-block:64px}.about h2,.education>h2,.about .grid>div,.education-list{grid-column:1/-1}.about h2,.education>h2{font-size:24px;margin-bottom:8px}.about .grid>div{display:block}.statement{font-size:32px}.context{margin-top:24px}.education-list{grid-template-columns:1fr;gap:40px}.education h3{font-size:24px}.contact{padding-block:64px}.contact:before{inset:80px calc(var(--gutter)*-1) 0 32%}.contact:after{right:0;top:24px;width:80px;height:80px;border-radius:0 32px 0 0}.contact h2{font-size:clamp(52px,14vw,72px)}.email{font-size:clamp(20px,5.7vw,28px)}footer{flex-direction:column;gap:4px}}
-
-</style>
+<!doctype html>
+<html lang={locale === 'pt' ? 'pt-BR' : 'en'} data-locale={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={t.description} />
+    <meta name="theme-color" content="#f4f6fb" />
+    <meta property="og:title" content={t.title} />
+    <meta property="og:description" content={t.description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content={locale === 'pt' ? 'pt_BR' : 'en_US'} />
+    <title>{t.title}</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {Astro.site && <>
+      <link rel="canonical" href={new URL(`/${locale}/`, Astro.site)} />
+      <link rel="alternate" hreflang="pt-BR" href={new URL('/pt/', Astro.site)} />
+      <link rel="alternate" hreflang="en" href={new URL('/en/', Astro.site)} />
+    </>}
+    <link rel="preload" href="/fonts/bricolage-grotesque-latin-600.woff2" as="font" type="font/woff2" crossorigin />
+    <script is:inline>
+      try {
+        const stored = localStorage.getItem('gf-theme');
+        document.documentElement.dataset.theme = stored === 'dark' || stored === 'light' ? stored : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      } catch { document.documentElement.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{t.skip}</a>
+    <header class="site-header">
+      <a class="brand" href={`/${locale}/`} aria-label="Gabriel Ferrari">
+        <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M23 10H16a10 10 0 0 0 0 20h8V20H16M31 10v20M31 10h7M31 20h6" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        <span>Gabriel Ferrari</span>
+      </a>
+      <nav class="main-nav" aria-label={locale === 'pt' ? 'Navegação principal' : 'Main navigation'}>
+        {t.nav.map((label, i) => <a href={`#${sections[i]}`} data-nav={sections[i]}>{label}</a>)}
+      </nav>
+      <div class="header-controls">
+        <nav class="languages" aria-label={locale === 'pt' ? 'Idioma' : 'Language'}>
+          <a href="/pt/" lang="pt-BR" hreflang="pt-BR" data-language="pt" aria-current={locale === 'pt' ? 'page' : undefined} aria-label="Português">PT</a>
+          <a href="/en/" lang="en" hreflang="en" data-language="en" aria-current={locale === 'en' ? 'page' : undefined} aria-label="English">EN</a>
+        </nav>
+        <button class="theme-toggle" type="button" aria-label={t.theme} aria-pressed="false">
+          <svg class="sun" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"/></svg>
+        </button>
+      </div>
+    </header>
+    <main id="main">
+      <section class="hero shell" id="top" aria-labelledby="hero-title">
+        <div class="hero-type">
+          <h1 id="hero-title"><span>{t.headline[0]}</span><span>{t.headline[1]}</span></h1>
+          <div class="hero-support"><p>{t.intro}</p>
+            <div class="actions"><a class="button primary" href="#projects">{t.view}<span aria-hidden="true">↘</span></a>
+              {locale === 'pt' ? <a class="button secondary" href="/documents/gabriel-ferrari-cv-pt.docx" download>{t.cv}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></svg></a> : <a class="button secondary" href="#contact">{t.contact}<span aria-hidden="true">↗</span></a>}
+            </div>
+          </div>
+        </div>
+        <div class="hero-portrait">
+          <div class="portrait-orbit" aria-hidden="true"></div>
+          <div class="portrait-window"><img src="/media/portrait.webp" width="1000" height="1000" alt="Gabriel Ferrari" fetchpriority="high" /></div>
+          <span class="portrait-caption">Gabriel Ferrari<span>Swift / SwiftUI</span></span>
+          <span class="portrait-index" aria-hidden="true">iOS</span>
+        </div>
+        <div class="hero-foot"><p>{t.heroNote}</p><div class="mini-flow" aria-hidden="true"><span>iOS</span><i></i><span>{locale === 'pt' ? 'Estado' : 'State'}</span><i></i><span>API</span><i></i><span>{locale === 'pt' ? 'Dados' : 'Data'}</span></div><a href="#projects" class="scroll-cue" aria-label={t.jump}>↓</a></div>
+      </section>
+      <section id="projects" class="work shell" aria-labelledby="work-title">
+        <div class="section-opening"><h2 id="work-title">{t.selected}</h2><p>{t.selectedIntro}</p></div>
+        <nav class="project-index" aria-label={t.jump}><a href="#carely"><span>Carely</span><small>iOS</small></a><a href="#fintech"><span>Fintech</span><small>iOS + API</small></a><a href="#jordania"><span>Jordania</span><small>{locale === 'pt' ? 'Autenticação' : 'Authentication'}</small></a></nav>
+        <article id="carely" class="project carely" aria-labelledby="carely-title">
+          <div class="project-title"><div class="project-name"><span class="carely-mark" aria-hidden="true">c</span><div><h3>Carely</h3><p>{t.team} / iOS</p></div></div><h4 id="carely-title">{t.carelyTitle}</h4></div>
+          <div class="project-overview"><p class="project-intro">{t.carelyIntro}</p><div class="contribution"><h5>{t.contribution}</h5><p>{t.carelyContribution}</p></div></div>
+          <div class="carely-stage" data-reveal="screens">
+            <svg class="carely-path" viewBox="0 0 1100 650" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M90 460C270 670 315 20 530 160S850 610 1040 330"/></svg>
+            {screens.map((src, i) => <figure class={`screen-evidence screen-${i}`}>
+              <figcaption><span class="step-number">{i + 1}</span><div><h5>{t.screenTitles[i]}</h5><p>{t.screenCaptions[i]}</p></div></figcaption>
+              <button class="screen-button" type="button" data-image={`/media/${src}.webp`} data-caption={`${t.screenTitles[i]} — ${t.screenCaptions[i]}`} aria-label={`${t.expandImage}: ${t.screenTitles[i]}`}>
+                <img src={`/media/${src}.webp`} width="650" height="1409" alt={t.screenAlts[i]} loading="lazy" /><span class="expand-sign" aria-hidden="true">↗</span>
+              </button>
+            </figure>)}
+          </div>
+          <div class="evidence-footer"><p>{t.carelyNote}</p><div class="project-links"><a href={links.appstore} target="_blank" rel="noopener noreferrer">App Store <span aria-hidden="true">↗</span></a><a href={links.carely} target="_blank" rel="noopener noreferrer">{t.repository} <span aria-hidden="true">↗</span></a></div></div>
+          <details class="secondary-evidence"><summary>{t.secondary}<span aria-hidden="true">+</span></summary><div class="secondary-content"><p>{t.secondaryText}</p>{['carely-institution', 'carely-institution-info'].map((src, i) => <button type="button" class="screen-button" data-image={`/media/${src}.webp`} data-caption={t.secondary} aria-label={`${t.expandImage}: ${t.secondary} ${i+1}`}><img src={`/media/${src}.webp`} width="650" height="1409" loading="lazy" alt={locale === 'pt' ? 'Detalhes de instituição no Carely durante o desenvolvimento.' : 'Carely institution details during development. The app interface is in Portuguese.'}/><span class="expand-sign" aria-hidden="true">↗</span></button>)}</div></details>
+          <CaseNotes title={t.decisions} items={t.carelyCase}/>
+        </article>
+        <article id="fintech" class="project fintech" aria-labelledby="fintech-title">
+          <div class="project-title"><div class="project-name"><span class="fintech-mark" aria-hidden="true"><i></i><i></i><i></i></span><div><h3>Fintech</h3><p>{t.personal} / iOS + API</p></div></div><h4 id="fintech-title">{t.fintechTitle}</h4></div>
+          <div class="project-overview"><div><span class="status"><i></i>{t.development}</span><p class="project-intro">{t.fintechIntro}</p></div><div class="contribution"><h5>{t.contribution}</h5><p>{t.fintechContribution}</p></div></div>
+          <FintechFlow locale={locale}/>
+          <div class="project-links fintech-links"><a href={links.fintechIOS} target="_blank" rel="noopener noreferrer">{t.iosRepo} <span aria-hidden="true">↗</span></a><a href={links.fintechAPI} target="_blank" rel="noopener noreferrer">API <span aria-hidden="true">↗</span></a><a href={links.fintechDocs} target="_blank" rel="noopener noreferrer">{t.documentation} <span aria-hidden="true">↗</span></a></div>
+          <CaseNotes title={t.decisions} items={t.fintechCase}/>
+        </article>
+        <article id="jordania" class="project jordania" aria-labelledby="jordania-title">
+          <div class="jordania-copy"><div class="project-name"><div><h3>Jordania</h3><p>{t.team} / iOS + Java</p></div></div><h4 id="jordania-title">{t.jordaniaTitle}</h4><p>{t.jordaniaIntro}</p><p class="jordania-note">{t.jordaniaNote}</p><div class="project-links"><a href={links.jordaniaIOS} target="_blank" rel="noopener noreferrer">{t.iosRepo} <span aria-hidden="true">↗</span></a><a href={links.jordaniaAPI} target="_blank" rel="noopener noreferrer">{t.backendRepo} <span aria-hidden="true">↗</span></a></div></div>
+          <div class="jordania-graphic" aria-hidden="true"><div class="provider-pair"><span>Apple</span><span>Google</span></div><div class="j-connector"></div><span class="j-session">iOS / {locale === 'pt' ? 'Sessão' : 'Session'}</span><div class="j-connector"></div><span class="j-backend">Java / Spring</span><div class="j-routes"><span>login</span><span>refresh</span><span>logout</span></div></div>
+          <div class="jordania-case"><CaseNotes title={t.decisions} items={t.jordaniaCase}/></div>
+        </article>
+      </section>
+      <section id="profile" class="profile-section" aria-labelledby="profile-title"><div class="shell">
+        <div class="profile-opening"><h2 id="profile-title">{t.profileTitle.split('\n').map(line => <span>{line}</span>)}</h2><div><p>{t.profileIntro}</p><p>{t.academyIntro}</p></div></div>
+        <div class="capabilities">{t.capabilities.map(([title, tech, summary, evidence], i) => <div class={`capability capability-${i}`}><div><h3>{title}</h3><p class="tech-list">{tech}</p></div><p>{summary}</p><a href={i === 0 ? '#carely' : i === 1 ? '#fintech' : '#top'}>{evidence}<span aria-hidden="true">↗</span></a></div>)}</div>
+        <div class="education"><h3>{t.education}</h3><div><h4>{t.degree}</h4><p>UNINTER</p><small>{t.expected}</small></div><div><h4>Apple Developer Academy</h4><p>Instituto de Pesquisas Eldorado</p><small>{t.academy}</small></div></div>
+      </div></section>
+      <section id="contact" class="contact-section shell" aria-labelledby="contact-title"><div class="contact-heading"><h2 id="contact-title">{t.closing.split('\n').map(line => <span>{line}</span>)}</h2><p>{t.closingIntro}</p></div><a class="contact-email" href={`mailto:${links.email}`}><span>{links.email}</span><span class="email-arrow" aria-hidden="true">↗</span><span class="sr-only"> — {t.emailAction}</span></a><div class="contact-bottom"><p>{t.location}</p><div><a href={links.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn <span aria-hidden="true">↗</span></a><a href={links.github} target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a></div></div></section>
+    </main>
+    <footer class="site-footer shell"><span>{t.footer}</span><span>Swift / SwiftUI / iOS</span><a href="#top">{t.backTop} <span aria-hidden="true">↑</span></a></footer>
+    <dialog class="image-dialog" aria-labelledby="image-caption"><button type="button" class="image-close" aria-label={t.closeImage}>×</button><figure><img alt=""/><figcaption id="image-caption"></figcaption></figure></dialog>
+    <script>import '../scripts/site';</script>
+  </body>
+</html>
