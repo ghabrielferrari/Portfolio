@@ -12,13 +12,18 @@ const c = copy[Astro.props.locale];
   </div>
 </section>
 <style>
-  .ios{grid-column:1/7;padding-right:48px}.backend{grid-column:7/10}.web{grid-column:10/-1}
-  article{border-top:1px solid var(--divider);padding-top:24px;min-width:0}
+
+  .profile{align-items:start}
+  .ios{grid-column:1/7;padding:40px;background:var(--surface);border-radius:12px;position:relative;box-shadow:var(--shadow-soft)}
+  .ios:before{content:'';position:absolute;left:0;top:40px;bottom:40px;width:3px;background:var(--interaction);border-radius:2px}
+  .backend{grid-column:7/10;padding:24px 0}.web{grid-column:10/-1;padding:24px 0}
+  article{min-width:0}
   h3{font-size:24px;line-height:1.2}
-  .ios h3{font-size:40px;letter-spacing:-.03em}
+  .ios h3{font-family:var(--display);font-size:40px;letter-spacing:-.03em}
   .technologies{margin-top:24px;color:var(--secondary)}
   .ios .technologies{font-size:28px;color:var(--text)}
   .caption{margin-top:32px}.caption strong{font-weight:400}.caption a{display:inline-flex;align-items:center;min-height:44px}
-  @media(min-width:600px) and (max-width:1023px){.ios{grid-column:1/5;padding-right:24px}.backend{grid-column:5/7}.web{grid-column:7/-1}h3{font-size:21px}.ios h3{font-size:32px}}
-  @media(max-width:599px){.profile{gap:32px}.ios,.backend,.web{grid-column:1/-1;padding-right:0}.ios h3{font-size:32px}.technologies{margin-top:16px}.caption{margin-top:24px}}
+  @media(min-width:600px) and (max-width:1023px){.ios{grid-column:1/5;padding:32px}.backend,.web{grid-column:5/-1;padding:0}.backend{grid-row:1}.web{grid-row:2}.ios{grid-row:1/3}h3{font-size:24px}.ios h3{font-size:32px}}
+  @media(max-width:599px){.profile{gap:40px}.ios,.backend,.web{grid-column:1/-1}.ios{padding:32px 24px}.backend,.web{padding:0 24px}.ios h3{font-size:32px}.technologies{margin-top:16px}.caption{margin-top:24px}}
+
 </style>

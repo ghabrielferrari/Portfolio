@@ -175,14 +175,43 @@ test('Fintech scenarios respond immediately, keyboard selects, animation cancels
   await expect(page.locator('#scenario-1')).toBeVisible();
   await expect(page.locator('[data-unit="3"]')).toHaveAttribute('data-active','false');
   await expect(page.locator('[data-unit="3"] [data-stage-status]')).toHaveText('Fora deste percurso');
+  await expect(page.locator('[data-connector="2"]')).toHaveAttribute('data-active','false');
+  await expect(page.locator('[data-connector="0"] .connector-arrow')).toHaveText('↔');
   await controls.nth(2).check();
   await expect(page.locator('#scenario-2')).toContainText('mesma chave');
+  await expect(page.locator('[data-connector="2"]')).toHaveAttribute('data-active','true');
+  await expect(page.locator('[data-connector="0"] .connector-arrow')).toHaveText('→');
   await controls.nth(0).check();
   await expect(page.locator('#scenario-0')).toBeVisible();
   await expect(page.locator('[data-scenario]:visible')).toHaveCount(1);
-  expect(await page.locator('[data-flow]').evaluate(e => e.getAnimations({subtree:true}).filter(a => a.playState === 'running').length)).toBeLessThanOrEqual(4);
+  expect(await page.locator('[data-flow]').evaluate(e => e.getAnimations({subtree:true}).filter(a => a.playState === 'running' && a.constructor.name === 'Animation').length)).toBeLessThanOrEqual(8);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await controls.nth(2).check();
   expect(await page.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length)).toBe(0);
   expect(await page.locator('#hero-heading').evaluate(e => getComputedStyle(e).opacity)).toBe('1');
+});
+
+// Guard the interruption contract, including a media-preference change mid-progression.
+test('rapid scenario changes leave only the final path, with bounded motion', async ({ page }) => {
+  await page.goto('/Portfolio/en/');
+  await page.locator('[data-flow]').scrollIntoViewIfNeeded();
+  const state = await page.evaluate(() => {
+    const radios = [...document.querySelectorAll<HTMLInputElement>('input[name="scenario"]')];
+    const previous: Animation[] = [];
+    for (const index of [1,2,1,0,2]) {
+      const flow = document.querySelector('[data-flow]')!;
+      previous.push(...flow.getAnimations({subtree:true}));
+      radios[index]!.checked = true;
+      radios[index]!.dispatchEvent(new Event('change'));
+    }
+    const current = document.querySelector('[data-flow]')!.getAnimations({subtree:true});
+    return {oldCancelled: previous.every(animation => animation.playState === 'idle'), durations: current.map(animation => { const timing = animation.effect!.getTiming(); return Number(timing.duration) + Number(timing.delay); })};
+  });
+  expect(state.oldCancelled).toBeTruthy();
+  expect(Math.max(...state.durations)).toBeLessThanOrEqual(600);
+  await expect(page.locator('[data-flow]')).toHaveAttribute('data-selected-scenario','2');
+  await expect(page.locator('[data-scenario]:visible')).toHaveCount(1);
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await expect.poll(() => page.locator('[data-flow]').evaluate(flow => flow.getAnimations({subtree:true}).length)).toBe(0);
+  expect(await page.locator('.connector-progress').evaluateAll(connectors => connectors.every(connector => getComputedStyle(connector).transform === 'matrix(1, 0, 0, 1, 0, 0)'))).toBeTruthy();
 });

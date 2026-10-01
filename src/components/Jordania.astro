@@ -16,12 +16,14 @@ const p = project.data[locale];
   </div>
 </article>
 <style>
-  .jordania{border-top:1px solid var(--divider);padding-top:48px;margin-top:64px}
+
+  .jordania{padding:40px 48px;margin-top:64px;border-radius:12px;background:var(--surface)}
   .title{grid-column:1/5}.description{grid-column:5/-1}
   h3{font-family:var(--display);font-size:40px;line-height:1.1;letter-spacing:-.035em}
-  .flow{font-size:18px;margin-bottom:24px;line-height:1.65}
-  .flow span{color:var(--secondary);padding-inline:8px}
+  .flow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:18px;margin-bottom:24px;line-height:1.65;color:var(--interaction)}
+  .flow span{color:var(--secondary);padding-inline:4px}
   .note{margin-top:16px}
-  @media(min-width:600px) and (max-width:1023px){.title{grid-column:1/4}.description{grid-column:4/-1}}
-  @media(max-width:599px){.title,.description{grid-column:1/-1}.flow{margin-top:8px}}
+  @media(min-width:600px) and (max-width:1023px){.jordania{padding:32px}.title{grid-column:1/4}.description{grid-column:4/-1}}
+  @media(max-width:599px){.jordania{padding:32px 24px;margin-top:48px}.title,.description{grid-column:1/-1}.flow{margin-top:8px}}
+
 </style>
