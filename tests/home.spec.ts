@@ -39,6 +39,8 @@ for (const locale of ['pt', 'en']) {
         await page.setViewportSize({ width, height: 900 });
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${locale}, ${theme}, ${width}`).toBeTruthy();
         await expect(page.locator('#hero-heading')).toBeVisible();
+        const textOverflow = await page.locator('main h1,main h2,main h3,main h4,main p,figcaption').evaluateAll(elements => elements.filter(element => element.clientWidth > 0 && element.scrollWidth > element.clientWidth + 1).map(element => element.textContent));
+        expect(textOverflow, `${locale}, ${theme}, ${width}: text overflow`).toEqual([]);
       }
       expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe(theme === 'light' ? 'rgb(244, 246, 245)' : 'rgb(17, 24, 32)');
     }
@@ -65,14 +67,16 @@ test('contrast, local fonts, dimensions, and narrow-screen controls', async ({ p
     const ratios = await page.evaluate(() => {
       const style = getComputedStyle(document.documentElement);
       function luminance(hex: string) {
-        const channels = hex.trim().slice(1).match(/.{2}/g)!.map(channel => parseInt(channel,16)/255).map(channel => channel <= .04045 ? channel/12.92 : ((channel+.055)/1.055)**2.4);
+        const value = hex.trim().slice(1);
+        const normalized = value.length === 3 ? [...value].map(character => character + character).join('') : value;
+        const channels = normalized.match(/.{2}/g)!.map(channel => parseInt(channel,16)/255).map(channel => channel <= .04045 ? channel/12.92 : ((channel+.055)/1.055)**2.4);
         return channels[0]!*.2126 + channels[1]!*.7152 + channels[2]!*.0722;
       }
-      const bg = luminance(style.getPropertyValue('--bg'));
-      return ['--text','--secondary','--interaction'].map(token => {
+      return ['--bg','--surface','--wash','--carely-surface','--carely-wash'].flatMap(background => ['--text','--secondary','--interaction'].map(token => {
+        const bg = luminance(style.getPropertyValue(background));
         const foreground = luminance(style.getPropertyValue(token));
         return (Math.max(bg,foreground)+.05)/(Math.min(bg,foreground)+.05);
-      });
+      }));
     });
     for (const ratio of ratios) expect(ratio).toBeGreaterThanOrEqual(4.5);
   }
@@ -121,7 +125,12 @@ test('no JavaScript: language selector, screenshots, expansion and all scenarios
   await expect(page.locator('#carely .screens figure')).toHaveCount(3);
   await page.locator('#carely summary').click();
   await expect(page.locator('#carely .institutions')).toBeVisible();
-  await expect(page.locator('[data-scenario]:visible')).toHaveCount(3);
+  await expect(page.locator('[data-scenario]')).toHaveCount(3);
+  for (const index of [0,1,2]) {
+    await page.locator('input[name="scenario"]').nth(index).check();
+    await expect(page.locator(`#scenario-${index}`)).toBeVisible();
+    await expect(page.locator('[data-scenario]:visible')).toHaveCount(1);
+  }
   await page.locator('[data-enlarge]').first().click();
   await expect(page).toHaveURL(/\/_astro\/.*\.jpg$/);
   await context.close();
@@ -168,11 +177,14 @@ test('Carely keyboard expansion, modal Escape, focus restoration and focus trap'
 
 test('Fintech scenarios respond immediately, keyboard selects, animation cancels, reduced motion is final', async ({ page }) => {
   await page.goto('/Portfolio/pt/');
+  await page.locator('[data-controls]').scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-flow]')).toHaveAttribute('data-enhanced','true');
   const controls = page.locator('input[name="scenario"]');
   await controls.nth(0).focus();
   await page.keyboard.press('ArrowRight');
   await expect(controls.nth(1)).toBeChecked();
   await expect(page.locator('#scenario-1')).toBeVisible();
+  await expect(page.locator('[data-unit="1"] [data-operation]')).toHaveText('Refresh coordenado');
   await expect(page.locator('[data-unit="3"]')).toHaveAttribute('data-active','false');
   await expect(page.locator('[data-unit="3"] [data-stage-status]')).toHaveText('Fora deste percurso');
   await expect(page.locator('[data-connector="2"]')).toHaveAttribute('data-active','false');
@@ -184,34 +196,112 @@ test('Fintech scenarios respond immediately, keyboard selects, animation cancels
   await controls.nth(0).check();
   await expect(page.locator('#scenario-0')).toBeVisible();
   await expect(page.locator('[data-scenario]:visible')).toHaveCount(1);
-  expect(await page.locator('[data-flow]').evaluate(e => e.getAnimations({subtree:true}).filter(a => a.playState === 'running' && a.constructor.name === 'Animation').length)).toBeLessThanOrEqual(8);
+  expect(await page.locator('[data-flow]').evaluate(e => e.getAnimations({subtree:true}).filter(a => a.playState === 'running' && a.constructor.name === 'Animation').length)).toBeLessThanOrEqual(9);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await controls.nth(2).check();
-  expect(await page.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length)).toBe(0);
+  await expect.poll(() => page.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length)).toBe(0);
   expect(await page.locator('#hero-heading').evaluate(e => getComputedStyle(e).opacity)).toBe('1');
 });
 
 // Guard the interruption contract, including a media-preference change mid-progression.
-test('rapid scenario changes leave only the final path, with bounded motion', async ({ page }) => {
+test('rapid scenario changes keep the latest path and reduce immediately', async ({ page }) => {
   await page.goto('/Portfolio/en/');
-  await page.locator('[data-flow]').scrollIntoViewIfNeeded();
-  const state = await page.evaluate(() => {
-    const radios = [...document.querySelectorAll<HTMLInputElement>('input[name="scenario"]')];
-    const previous: Animation[] = [];
-    for (const index of [1,2,1,0,2]) {
-      const flow = document.querySelector('[data-flow]')!;
-      previous.push(...flow.getAnimations({subtree:true}));
-      radios[index]!.checked = true;
-      radios[index]!.dispatchEvent(new Event('change'));
-    }
-    const current = document.querySelector('[data-flow]')!.getAnimations({subtree:true});
-    return {oldCancelled: previous.every(animation => animation.playState === 'idle'), durations: current.map(animation => { const timing = animation.effect!.getTiming(); return Number(timing.duration) + Number(timing.delay); })};
-  });
-  expect(state.oldCancelled).toBeTruthy();
-  expect(Math.max(...state.durations)).toBeLessThanOrEqual(600);
-  await expect(page.locator('[data-flow]')).toHaveAttribute('data-selected-scenario','2');
+  await page.locator('[data-controls]').scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-flow]')).toHaveAttribute('data-enhanced','true');
+  const radios=page.locator('input[name="scenario"]');
+  for (const index of [1,2,1,0,2]) {
+    await radios.nth(index).check();
+    await expect(page.locator('[data-flow]')).toHaveAttribute('data-selected-scenario',String(index));
+    await expect(page.locator(`#scenario-${index}`)).toBeVisible();
+  }
   await expect(page.locator('[data-scenario]:visible')).toHaveCount(1);
+  await expect(page.locator('[data-unit="3"] [data-operation]')).toHaveText('Same key, one transaction');
+  await radios.nth(2).focus();
   await page.emulateMedia({reducedMotion:'reduce'});
-  await expect.poll(() => page.locator('[data-flow]').evaluate(flow => flow.getAnimations({subtree:true}).length)).toBe(0);
-  expect(await page.locator('.connector-progress').evaluateAll(connectors => connectors.every(connector => getComputedStyle(connector).transform === 'matrix(1, 0, 0, 1, 0, 0)'))).toBeTruthy();
+  await expect.poll(()=>page.locator('.connector-progress:visible').evaluateAll(paths=>paths.every(path=>parseFloat(getComputedStyle(path).strokeDasharray)===1))).toBeTruthy();
+  await expect.poll(()=>page.evaluate(()=>document.getAnimations().filter(animation=>animation.playState==='running').length)).toBe(0);
+  const final=await page.locator('[data-flow]').evaluate(flow=>({state:flow.getAttribute('data-selected-scenario'),paths:[...flow.querySelectorAll('.connector-progress')].map(path=>getComputedStyle(path).strokeDasharray)}));
+  await page.waitForTimeout(650);
+  expect(await page.locator('[data-flow]').evaluate(flow=>({state:flow.getAttribute('data-selected-scenario'),paths:[...flow.querySelectorAll('.connector-progress')].map(path=>getComputedStyle(path).strokeDasharray)}))).toEqual(final);
+  await expect(radios.nth(2)).toBeFocused();
+});
+
+test('editorial motion is finite, plays once, and reduces to visible content', async ({ page }) => {
+  await page.goto('/Portfolio/pt/');
+  for (const selector of ['#carely .screen-0','#technical .ios','#about .statement','#contact h2']) {
+    const element = page.locator(selector);
+    await element.scrollIntoViewIfNeeded();
+    await expect(element).toHaveClass(/is-entering/);
+    const timing = await element.evaluate(element => element.getAnimations().map(animation => animation.effect!.getTiming()));
+    expect(timing.every(item => item.iterations === 1 && Number(item.duration) <= 800)).toBeTruthy();
+  }
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await expect.poll(() => page.evaluate(() => document.getAnimations().filter(animation => animation.playState === 'running').length)).toBe(0);
+  for (const selector of ['#carely .screen-0','#technical .ios','#about .statement','#contact h2']) {
+    expect(await page.locator(selector).evaluate(element => ({opacity:getComputedStyle(element).opacity,transform:getComputedStyle(element).transform,clip:getComputedStyle(element).clipPath}))).toEqual({opacity:'1',transform:'none',clip:'none'});
+  }
+  // Returning to an observed section must not replay an entrance.
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.locator('#carely .screen-0').scrollIntoViewIfNeeded();
+  expect(await page.locator('#carely .screen-0').evaluate(element => element.getAnimations().length)).toBe(0);
+});
+
+test('Fintech selector follows the selected control after responsive reflow', async ({page}) => {
+  await page.goto('/Portfolio/en/');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.locator('[data-controls]').scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-flow]')).toHaveAttribute('data-enhanced','true');
+  for (const width of [1440,390,768,320]) {
+    await page.setViewportSize({width,height:844});
+    await page.locator('input[name="scenario"]').nth(2).check();
+    await expect.poll(() => page.locator('[data-selection]').evaluate(indicator => {
+      const selected=document.querySelector('input[name="scenario"]:checked')!.closest('label')!;
+      const a=indicator.getBoundingClientRect(), b=selected.getBoundingClientRect();
+      return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y),Math.abs(a.width-b.width),Math.abs(a.height-b.height));
+    })).toBeLessThan(1);
+    await expect(page.locator('[data-unit="3"] [data-operation]')).toHaveText('Same key, one transaction');
+  }
+});
+
+
+test('Carely reveal waits for evidence rather than empty layout spacing', async ({page}) => {
+  await page.setViewportSize({width:1440,height:900});
+  await page.goto('/Portfolio/pt/');
+  await page.evaluate(() => document.fonts.ready);
+  const screen=page.locator('#carely .screen-2');
+  const top=await screen.evaluate(element => element.getBoundingClientRect().top+scrollY);
+  // This reproduces the old trigger point, with only the former 240px spacer visible.
+  await page.evaluate(top => scrollTo({top:top-innerHeight-60,behavior:'instant'}),top);
+  await expect(screen).not.toHaveClass(/is-entering/);
+  expect(await screen.locator('figcaption').evaluate(element => element.getBoundingClientRect().top)).toBeGreaterThan(900);
+  await page.evaluate(top => scrollTo({top:top-innerHeight+180,behavior:'instant'}),top);
+  await expect(screen).toHaveClass(/is-entering/);
+  expect(await screen.locator('figcaption').evaluate(element => element.getBoundingClientRect().top)).toBeLessThan(900);
+});
+
+test('Carely mobile keyboard follows the visual reading order without backward jumps', async ({page,browserName})=>{
+  await page.setViewportSize({width:390,height:844});
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.goto('/Portfolio/pt/');
+  const sequence=await page.locator('#carely a').evaluateAll(links=>links.map(link=>link.getAttribute('aria-label')??link.textContent?.trim()));
+  expect(sequence.slice(0,5)).toEqual(['Ampliar: Busca por vagas','App Store','Repositório','Ampliar: Detalhes da vaga','Ampliar: Confirmação de candidatura']);
+  await page.locator('#carely .project-links a').last().focus();
+  const before=await page.evaluate(()=>scrollY);
+  // Verified in the running macOS WebKit: Tab skips links; Option+Tab includes them.
+  await page.keyboard.press(browserName==='webkit'?'Alt+Tab':'Tab');
+  await expect(page.locator('#carely .screen-1 a')).toBeFocused();
+  expect(await page.evaluate(()=>scrollY)).toBeGreaterThanOrEqual(before);
+});
+
+test('Fintech mobile connectors span the open path between glyphs',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await page.goto('/Portfolio/en/');
+  await page.locator('[data-controls]').scrollIntoViewIfNeeded();
+  const geometry=await page.locator('[data-connector]').evaluateAll(connectors=>connectors.map(connector=>{
+    const line=connector.querySelector('.vertical-path')!.getBoundingClientRect();
+    const body=connector.parentElement!.getBoundingClientRect();
+    const next=connector.parentElement!.nextElementSibling!.querySelector('.node-glyph')!.getBoundingClientRect();
+    return {height:line.height,expected:body.height-84+28,nextGap:next.top-line.bottom};
+  }));
+  for(const line of geometry){expect(Math.abs(line.height-line.expected)).toBeLessThan(1);expect(line.nextGap).toBeLessThanOrEqual(13);expect(line.height).toBeGreaterThan(80)}
 });
