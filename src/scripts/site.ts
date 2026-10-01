@@ -1,3 +1,5 @@
+import { withBase } from "../utils/paths";
+
 const root = document.documentElement;
 const toggle = document.querySelector<HTMLButtonElement>(".theme-toggle");
 const syncTheme = () => {
@@ -22,10 +24,33 @@ toggle?.addEventListener("click", () => {
 
 const languageLinks =
   document.querySelectorAll<HTMLAnchorElement>("[data-language]");
+languageLinks.forEach((link) =>
+  link.addEventListener("click", () => {
+    try {
+      localStorage.setItem("gf-language", link.dataset.language!);
+    } catch {
+      /* Language links work without storage. */
+    }
+  }),
+);
+if (document.body.hasAttribute("data-language-entry")) {
+  let language: string | null = null;
+  try {
+    language = localStorage.getItem("gf-language");
+  } catch {
+    /* Use the browser language when storage is unavailable. */
+  }
+  if (language !== "pt" && language !== "en") {
+    language = /^pt(?:-|$)/i.test(navigator.languages[0] || navigator.language)
+      ? "pt"
+      : "en";
+  }
+  location.replace(`${withBase(`${language}/`)}${location.hash}`);
+}
 let currentSection = location.hash.slice(1) || "top";
 const updateLanguages = () =>
   languageLinks.forEach((link) => {
-    link.href = `/${link.dataset.language}/${currentSection === "top" ? "" : `#${currentSection}`}`;
+    link.href = `${withBase(`${link.dataset.language}/`)}${currentSection === "top" ? "" : `#${currentSection}`}`;
   });
 updateLanguages();
 window.addEventListener("hashchange", () => {

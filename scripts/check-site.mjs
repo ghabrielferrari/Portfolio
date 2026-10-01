@@ -3,10 +3,23 @@ import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
+import config from "../astro.config.mjs";
 
 const require = createRequire(import.meta.url);
-const base =
-  process.env.SITE_URL || process.env.BASE_URL || "http://127.0.0.1:4330";
+const base = new URL(
+  config.base,
+  process.env.SITE_URL || process.env.BASE_URL || "http://127.0.0.1:4330",
+).href.replace(/\/$/, "");
+for (let attempt = 0; ; attempt += 1) {
+  try {
+    const response = await fetch(`${base}/pt/`, { signal: AbortSignal.timeout(1000) });
+    assert.ok(response.ok);
+    break;
+  } catch {
+    assert.ok(attempt < 29, `Preview unavailable at ${base}/pt/`);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+}
 const output = fileURLToPath(new URL("../review/", import.meta.url));
 await mkdir(output, { recursive: true });
 const axe = await readFile(require.resolve("axe-core/axe.min.js"), "utf8");
@@ -90,6 +103,92 @@ async function revealPage(page) {
 }
 
 try {
+  await check("Root selects browser language or saved preference and preserves hash", async () => {
+    for (const [locale, preference, expected] of [
+      ["pt-BR", null, "pt"],
+      ["en-US", null, "en"],
+      ["pt-BR", "en", "en"],
+      ["en-US", "pt", "pt"],
+      ["pt-BR", "invalid", "pt"],
+    ]) {
+      const entry = await browser.newContext({ locale, reducedMotion: "reduce" });
+      if (preference) await entry.addInitScript((value) => localStorage.setItem("gf-language", value), preference);
+      const entryPage = await entry.newPage();
+      await entryPage.goto(`${base}/#carely`);
+      await entryPage.waitForURL(`${base}/${expected}/#carely`);
+      assert.equal(await entryPage.locator("html").getAttribute("lang"), expected === "pt" ? "pt-BR" : "en");
+      await entry.close();
+    }
+  });
+  await check("Explicit locale routes never redirect based on preference", async () => {
+    const entry = await browser.newContext({ locale: "en-US" });
+    await entry.addInitScript(() => localStorage.setItem("gf-language", "en"));
+    const entryPage = await entry.newPage();
+    for (const locale of ["pt", "en"]) {
+      await entryPage.goto(`${base}/${locale}/`, { waitUntil: "networkidle" });
+      assert.equal(entryPage.url(), `${base}/${locale}/`);
+    }
+    await entry.close();
+  });
+  await check("Root and language links work when storage is unavailable", async () => {
+    const entry = await browser.newContext({ locale: "en-US", reducedMotion: "reduce" });
+    await entry.addInitScript(() => Object.defineProperty(window, "localStorage", { get() { throw new Error("Storage unavailable"); } }));
+    const entryPage = await entry.newPage();
+    await entryPage.goto(`${base}/`);
+    await entryPage.waitForURL(`${base}/en/`);
+    await entryPage.locator('[data-language="pt"]').click();
+    await entryPage.waitForURL(`${base}/pt/`);
+    assert.equal(await entryPage.locator("html").getAttribute("lang"), "pt-BR");
+    await entry.close();
+  });
+  await check("Root without JavaScript serves PT content and real locale links", async () => {
+    const entry = await browser.newContext({ javaScriptEnabled: false, locale: "en-US" });
+    const entryPage = await entry.newPage();
+    await entryPage.goto(`${base}/`, { waitUntil: "networkidle" });
+    assert.equal(entryPage.url(), `${base}/`);
+    assert.equal(await entryPage.locator("html").getAttribute("lang"), "pt-BR");
+    assert.equal(await entryPage.locator(".project").count(), 3);
+    assert.equal(await entryPage.locator('link[rel="canonical"]').getAttribute("href"), `${config.site}${config.base}pt/`);
+    await entryPage.locator('[data-language="en"]').click();
+    await entryPage.waitForURL(`${base}/en/`);
+    assert.equal(await entryPage.locator("html").getAttribute("lang"), "en");
+    await entry.close();
+  });
+  await check("Hosted local URLs, CSS, scripts, fonts and favicon load under the base path", async () => {
+    const entry = await browser.newContext({ reducedMotion: "reduce" });
+    const entryPage = await entry.newPage();
+    const paths = new Set();
+    const fonts = new Set();
+    entryPage.on("response", (response) => {
+      if (new URL(response.url()).pathname.endsWith(".woff2")) fonts.add(response.url());
+    });
+    for (const locale of ["pt", "en"]) {
+      await entryPage.goto(`${base}/${locale}/`, { waitUntil: "networkidle" });
+      await entryPage.evaluate(() => document.fonts.ready);
+      assert.equal(await entryPage.evaluate(() => [...document.fonts].filter((font) => ["Bricolage", "Source"].includes(font.family) && font.status === "loaded").length), 2);
+      const urls = await entryPage.locator("[href], [src], [data-image]").evaluateAll((elements) => elements.flatMap((element) => ["href", "src", "data-image"].map((name) => element.getAttribute(name)).filter(Boolean)));
+      for (const value of urls) {
+        const url = new URL(value, entryPage.url());
+        if (url.origin !== new URL(base).origin) continue;
+        assert.ok(url.pathname.startsWith(config.base), url.href);
+        url.hash = "";
+        paths.add(url.href);
+      }
+    }
+    for (const url of paths) assert.equal((await entry.request.get(url)).status(), 200, url);
+    assert.equal(fonts.size, 2, "Both actual font requests must be captured");
+    for (const url of fonts) {
+      assert.ok(new URL(url).pathname.startsWith(config.base), url);
+      assert.ok(!new URL(url).pathname.includes("//"), url);
+      const response = await entry.request.get(url);
+      assert.equal(response.status(), 200);
+      assert.equal((await response.body()).subarray(0, 4).toString(), "wOF2");
+    }
+    const favicon = await entry.request.get(`${base}/favicon.svg`);
+    assert.equal(favicon.status(), 200);
+    assert.match(await favicon.text(), /<svg/);
+    await entry.close();
+  });
   for (const locale of ["pt", "en"])
     for (const theme of ["light", "dark"])
       for (const width of [1440, 390]) {
@@ -334,10 +433,11 @@ try {
       await page.goto(`${base}/pt/#contact`, { waitUntil: "networkidle" });
       await page.locator("#contact").scrollIntoViewIfNeeded();
       await page.waitForFunction(
-        () =>
+        (expected) =>
           document
             .querySelector('[data-language="en"]')
-            .getAttribute("href") === "/en/#contact",
+            .getAttribute("href") === expected,
+        `${new URL("en/", `${base}/`).pathname}#contact`,
       );
       await page.locator('[data-language="en"]').click();
       await page.waitForURL("**/en/#contact");
@@ -346,17 +446,19 @@ try {
         "dark",
       );
       assert.equal(await page.locator("html").getAttribute("lang"), "en");
+      assert.equal(await page.evaluate(() => localStorage.getItem("gf-language")), "en");
       assert.equal(
         await page
           .locator(".hero-support .actions a[href='#contact']")
           .getAttribute("href"),
         "#contact",
       );
-      assert.equal(await page.locator("a[download]").count(), 0);
+      assert.equal(await page.locator("a[download]").count(), 1);
+      assert.equal(await page.locator("a[download]").innerText(), "Download CV (Portuguese)");
     },
   );
-  await check("PT download serves the original DOCX", async () => {
-    await page.goto(`${base}/pt/`, { waitUntil: "networkidle" });
+  for (const locale of ["pt", "en"]) await check(`${locale}: download serves the original Portuguese DOCX`, async () => {
+    await page.goto(`${base}/${locale}/`, { waitUntil: "networkidle" });
     const link = page.locator("a[download]");
     assert.equal(await link.count(), 1);
     const response = await context.request.get(

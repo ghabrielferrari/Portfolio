@@ -2,12 +2,16 @@
 import { content, links } from '../data/content';
 import CaseNotes from './CaseNotes.astro';
 import FintechFlow from './FintechFlow.astro';
+import { withBase } from '../utils/paths';
+import displayFontUrl from '../assets/fonts/bricolage-grotesque-latin-600.woff2?url';
 import '../styles/global.css';
-interface Props { locale: 'pt' | 'en'; }
-const { locale } = Astro.props;
+interface Props { locale: 'pt' | 'en'; isEntry?: boolean; }
+const { locale, isEntry = false } = Astro.props;
 const t = content[locale];
 const screens = ['carely-search', 'carely-detail', 'carely-confirmation'];
 const sections = ['projects', 'profile', 'contact'];
+const canonical = new URL(withBase(`${locale}/`), Astro.site);
+const cvPath = withBase('documents/gabriel-ferrari-cv-pt.docx');
 ---
 <!doctype html>
 <html lang={locale === 'pt' ? 'pt-BR' : 'en'} data-locale={locale}>
@@ -19,15 +23,15 @@ const sections = ['projects', 'profile', 'contact'];
     <meta property="og:title" content={t.title} />
     <meta property="og:description" content={t.description} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
     <meta property="og:locale" content={locale === 'pt' ? 'pt_BR' : 'en_US'} />
     <title>{t.title}</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    {Astro.site && <>
-      <link rel="canonical" href={new URL(`/${locale}/`, Astro.site)} />
-      <link rel="alternate" hreflang="pt-BR" href={new URL('/pt/', Astro.site)} />
-      <link rel="alternate" hreflang="en" href={new URL('/en/', Astro.site)} />
-    </>}
-    <link rel="preload" href="/fonts/bricolage-grotesque-latin-600.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="icon" href={withBase('favicon.svg')} type="image/svg+xml" />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="pt-BR" href={new URL(withBase('pt/'), Astro.site)} />
+    <link rel="alternate" hreflang="en" href={new URL(withBase('en/'), Astro.site)} />
+    <link rel="alternate" hreflang="x-default" href={new URL(withBase(), Astro.site)} />
+    <link rel="preload" href={displayFontUrl} as="font" type="font/woff2" crossorigin />
     <script is:inline>
       try {
         const stored = localStorage.getItem('gf-theme');
@@ -35,10 +39,10 @@ const sections = ['projects', 'profile', 'contact'];
       } catch { document.documentElement.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
     </script>
   </head>
-  <body>
+  <body data-language-entry={isEntry ? '' : undefined}>
     <a class="skip-link" href="#main">{t.skip}</a>
     <header class="site-header">
-      <a class="brand" href={`/${locale}/`} aria-label="Gabriel Ferrari">
+      <a class="brand" href={withBase(`${locale}/`)} aria-label="Gabriel Ferrari">
         <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M23 10H16a10 10 0 0 0 0 20h8V20H16M31 10v20M31 10h7M31 20h6" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
         <span>Gabriel Ferrari</span>
       </a>
@@ -47,8 +51,8 @@ const sections = ['projects', 'profile', 'contact'];
       </nav>
       <div class="header-controls">
         <nav class="languages" aria-label={locale === 'pt' ? 'Idioma' : 'Language'}>
-          <a href="/pt/" lang="pt-BR" hreflang="pt-BR" data-language="pt" aria-current={locale === 'pt' ? 'page' : undefined} aria-label="Português">PT</a>
-          <a href="/en/" lang="en" hreflang="en" data-language="en" aria-current={locale === 'en' ? 'page' : undefined} aria-label="English">EN</a>
+          <a href={withBase('pt/')} lang="pt-BR" hreflang="pt-BR" data-language="pt" aria-current={locale === 'pt' ? 'page' : undefined} aria-label="Português">PT</a>
+          <a href={withBase('en/')} lang="en" hreflang="en" data-language="en" aria-current={locale === 'en' ? 'page' : undefined} aria-label="English">EN</a>
         </nav>
         <button class="theme-toggle" type="button" aria-label={t.theme} aria-pressed="false">
           <svg class="sun" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
@@ -62,13 +66,13 @@ const sections = ['projects', 'profile', 'contact'];
           <h1 id="hero-title"><span>{t.headline[0]}</span><span>{t.headline[1]}</span></h1>
           <div class="hero-support"><p>{t.intro}</p>
             <div class="actions"><a class="button primary" href="#projects">{t.view}<span aria-hidden="true">↘</span></a>
-              {locale === 'pt' ? <a class="button secondary" href="/documents/gabriel-ferrari-cv-pt.docx" download>{t.cv}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></svg></a> : <a class="button secondary" href="#contact">{t.contact}<span aria-hidden="true">↗</span></a>}
+              {locale === 'pt' ? <a class="button secondary" href={cvPath} download>{t.cv}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></svg></a> : <a class="button secondary" href="#contact">{t.contact}<span aria-hidden="true">↗</span></a>}
             </div>
           </div>
         </div>
         <div class="hero-portrait">
           <div class="portrait-orbit" aria-hidden="true"></div>
-          <div class="portrait-window"><img src="/media/portrait.webp" width="1000" height="1000" alt="Gabriel Ferrari" fetchpriority="high" /></div>
+          <div class="portrait-window"><img src={withBase('media/portrait.webp')} width="1000" height="1000" alt="Gabriel Ferrari" fetchpriority="high" /></div>
           <span class="portrait-caption">Gabriel Ferrari<span>Swift / SwiftUI</span></span>
           <span class="portrait-index" aria-hidden="true">iOS</span>
         </div>
@@ -84,13 +88,13 @@ const sections = ['projects', 'profile', 'contact'];
             <svg class="carely-path" viewBox="0 0 1100 650" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M90 460C270 670 315 20 530 160S850 610 1040 330"/></svg>
             {screens.map((src, i) => <figure class={`screen-evidence screen-${i}`}>
               <figcaption><span class="step-number">{i + 1}</span><div><h5>{t.screenTitles[i]}</h5><p>{t.screenCaptions[i]}</p></div></figcaption>
-              <button class="screen-button" type="button" data-image={`/media/${src}.webp`} data-caption={`${t.screenTitles[i]} — ${t.screenCaptions[i]}`} aria-label={`${t.expandImage}: ${t.screenTitles[i]}`}>
-                <img src={`/media/${src}.webp`} width="650" height="1409" alt={t.screenAlts[i]} loading="lazy" /><span class="expand-sign" aria-hidden="true">↗</span>
+              <button class="screen-button" type="button" data-image={withBase(`media/${src}.webp`)} data-caption={`${t.screenTitles[i]} — ${t.screenCaptions[i]}`} aria-label={`${t.expandImage}: ${t.screenTitles[i]}`}>
+                <img src={withBase(`media/${src}.webp`)} width="650" height="1409" alt={t.screenAlts[i]} loading="lazy" /><span class="expand-sign" aria-hidden="true">↗</span>
               </button>
             </figure>)}
           </div>
           <div class="evidence-footer"><p>{t.carelyNote}</p><div class="project-links"><a href={links.appstore} target="_blank" rel="noopener noreferrer">App Store <span aria-hidden="true">↗</span></a><a href={links.carely} target="_blank" rel="noopener noreferrer">{t.repository} <span aria-hidden="true">↗</span></a></div></div>
-          <details class="secondary-evidence"><summary>{t.secondary}<span aria-hidden="true">+</span></summary><div class="secondary-content"><p>{t.secondaryText}</p>{['carely-institution', 'carely-institution-info'].map((src, i) => <button type="button" class="screen-button" data-image={`/media/${src}.webp`} data-caption={t.secondary} aria-label={`${t.expandImage}: ${t.secondary} ${i+1}`}><img src={`/media/${src}.webp`} width="650" height="1409" loading="lazy" alt={locale === 'pt' ? 'Detalhes de instituição no Carely durante o desenvolvimento.' : 'Carely institution details during development. The app interface is in Portuguese.'}/><span class="expand-sign" aria-hidden="true">↗</span></button>)}</div></details>
+          <details class="secondary-evidence"><summary>{t.secondary}<span aria-hidden="true">+</span></summary><div class="secondary-content"><p>{t.secondaryText}</p>{['carely-institution', 'carely-institution-info'].map((src, i) => <button type="button" class="screen-button" data-image={withBase(`media/${src}.webp`)} data-caption={t.secondary} aria-label={`${t.expandImage}: ${t.secondary} ${i+1}`}><img src={withBase(`media/${src}.webp`)} width="650" height="1409" loading="lazy" alt={locale === 'pt' ? 'Detalhes de instituição no Carely durante o desenvolvimento.' : 'Carely institution details during development. The app interface is in Portuguese.'}/><span class="expand-sign" aria-hidden="true">↗</span></button>)}</div></details>
           <CaseNotes title={t.decisions} items={t.carelyCase}/>
         </article>
         <article id="fintech" class="project fintech" aria-labelledby="fintech-title">
@@ -113,7 +117,7 @@ const sections = ['projects', 'profile', 'contact'];
       </div></section>
       <section id="contact" class="contact-section shell" aria-labelledby="contact-title"><div class="contact-heading"><h2 id="contact-title">{t.closing.split('\n').map(line => <span>{line}</span>)}</h2><p>{t.closingIntro}</p></div><a class="contact-email" href={`mailto:${links.email}`}><span>{links.email}</span><span class="email-arrow" aria-hidden="true">↗</span><span class="sr-only"> — {t.emailAction}</span></a><div class="contact-bottom"><p>{t.location}</p><div><a href={links.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn <span aria-hidden="true">↗</span></a><a href={links.github} target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a></div></div></section>
     </main>
-    <footer class="site-footer shell"><span>{t.footer}</span><span>Swift / SwiftUI / iOS</span><a href="#top">{t.backTop} <span aria-hidden="true">↑</span></a></footer>
+    <footer class="site-footer shell"><span>{t.footer}</span><span>Swift / SwiftUI / iOS</span>{locale === 'en' && <a href={cvPath} download>{t.cv} (Portuguese)</a>}<a href="#top">{t.backTop} <span aria-hidden="true">↑</span></a></footer>
     <dialog class="image-dialog" aria-labelledby="image-caption"><button type="button" class="image-close" aria-label={t.closeImage}>×</button><figure><img alt=""/><figcaption id="image-caption"></figcaption></figure></dialog>
     <script>import '../scripts/site';</script>
   </body>

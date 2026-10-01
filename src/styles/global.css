@@ -1,13 +1,13 @@
 @font-face {
   font-family: Bricolage;
-  src: url("/fonts/bricolage-grotesque-latin-600.woff2") format("woff2");
+  src: url("../assets/fonts/bricolage-grotesque-latin-600.woff2") format("woff2");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: Source;
-  src: url("/fonts/source-sans-3-latin.woff2") format("woff2");
+  src: url("../assets/fonts/source-sans-3-latin.woff2") format("woff2");
   font-weight: 200 900;
   font-style: normal;
   font-display: swap;
