@@ -3,3 +3,4 @@ dist/
 .astro/
 review/*.png
 review/*.json
+review/

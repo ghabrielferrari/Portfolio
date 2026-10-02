@@ -18,16 +18,18 @@ async function asset(path) {
   assert.ok((await stat(new URL(pathname, dist))).isFile(), path);
 }
 
-for (const [file, locale] of [
+const caseRoute = (locale, slug) => `${locale}/${locale === "pt" ? "projetos" : "work"}/${slug}/`;
+for (const [file, locale, slug] of [
   ["index.html", "pt"],
   ["pt/index.html", "pt"],
   ["en/index.html", "en"],
+  ...["pt", "en"].flatMap(locale => ["carely", "fintech", "jordania"].map(slug => [`${caseRoute(locale, slug)}index.html`, locale, slug])),
 ]) {
   const html = await readFile(new URL(file, dist), "utf8");
   const tags = html.match(/<(?:link|meta|script|img|a|button)\b[^>]*>/g) || [];
   const links = tags.filter((tag) => tag.startsWith("<link"));
   const metas = tags.filter((tag) => tag.startsWith("<meta"));
-  const canonical = `${site}${prefix}${locale}/`;
+  const canonical = `${site}${prefix}${slug ? caseRoute(locale, slug) : `${locale}/`}`;
   assert.equal(
     attribute(links.find((tag) => attribute(tag, "rel") === "canonical"), "href"),
     canonical,
@@ -40,10 +42,15 @@ for (const [file, locale] of [
   );
   assert.deepEqual(
     Object.fromEntries(links.filter((tag) => attribute(tag, "hreflang")).map((tag) => [attribute(tag, "hreflang"), attribute(tag, "href")])),
-    { "pt-BR": `${site}${prefix}pt/`, en: `${site}${prefix}en/`, "x-default": `${site}${prefix}` },
+    { "pt-BR": `${site}${prefix}${slug ? caseRoute("pt", slug) : "pt/"}`, en: `${site}${prefix}${slug ? caseRoute("en", slug) : "en/"}`, "x-default": `${site}${prefix}${slug ? caseRoute("en", slug) : ""}` },
     file,
   );
-  assert.match(html, /<title>Gabriel Ferrari/);
+  assert.match(html, slug ? /<title>(Carely|Fintech|Jordania) .*Gabriel Ferrari<\/title>/ : /<title>Gabriel Ferrari/);
+  if (slug) {
+    assert.match(html, new RegExp(`data-case="${slug}"`));
+    assert.equal(tags.filter(tag => attribute(tag, "property") === "og:type").map(tag => attribute(tag, "content"))[0], "article");
+    assert.ok(!metas.some(tag => attribute(tag, "property") === "og:image"), "No invented OG asset");
+  }
   assert.ok(attribute(metas.find((tag) => attribute(tag, "name") === "description"), "content"));
   assert.ok(attribute(metas.find((tag) => attribute(tag, "property") === "og:title"), "content"));
   assert.ok(attribute(metas.find((tag) => attribute(tag, "property") === "og:description"), "content"));
@@ -75,4 +82,4 @@ assert.deepEqual(
   await readFile(new URL("documents/gabriel-ferrari-cv-pt.docx", dist)),
   await readFile(new URL("../public/documents/gabriel-ferrari-cv-pt.docx", import.meta.url)),
 );
-console.log("Static HTML, PT/EN SEO, base paths, CSS fonts and original CV: passed.");
+console.log("Nine static routes, PT/EN case SEO, base paths, CSS fonts and original CV: passed.");

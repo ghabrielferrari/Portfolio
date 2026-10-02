@@ -1,38 +1,31 @@
-# Portfolio AI Experiment — handoff
+# Portfolio — current handoff
 
 ## Goal and state
 
-Built the requested bilingual professional portfolio in `/Users/ferrari/Projects/VSCode/Portfolio-AI-Experiment`, an initially blank managed checkout. The existing Portfolio checkout was used as read-only evidence and asset reference.
+Loop 2 adds evidence-based bilingual project cases to the approved Home in `/Users/ferrari/Projects/VSCode/Portfolio`, branch `feat/portfolio-home`.
 
-The site uses static Astro pages at `/`, `/pt/` and `/en/`, native TypeScript interactions and CSS. Carely has a layered search → details → pre-submission confirmation narrative and a native screenshot dialog. Fintech has three explanatory scenarios, finite playback, manual steps and correctly directed response paths. Jordania has lower visual weight. Profile, education and email-first contact are complete.
+Current stack: Astro 7.3.5, strict TypeScript, static output and GitHub Pages base `/Portfolio/`, site `https://ghabrielferrari.github.io`. CI and manual deployment configuration were preserved.
 
-PT/EN copy, light/dark themes, equivalent section preservation, reduced motion and a useful no-JavaScript fallback are implemented. The original Portuguese DOCX is downloadable; English prioritizes Contact. No deployment or Git writes were performed.
+Six cases: `/pt/projetos/{carely,fintech,jordania}/` and `/en/work/{carely,fintech,jordania}/`. Carely is the visual iOS evidence; Fintech explains session/retry/idempotent persistence; Jordania is the compact team integration case. Home changes are three case CTAs and necessary factual corrections. Global styling and the interactive Fintech Home component are unchanged.
 
 ## Active files
 
-`src/components/Home.astro`, `src/styles/global.css`, `src/scripts/site.ts`, `src/data/content.ts`, `src/components/FintechFlow.astro`, `src/data/flow.ts`, `scripts/check-flow.ts`, `scripts/check-site.mjs`, and `public/` assets. Commands and asset/contribution boundaries are in `README.md`.
+`src/data/cases.ts` pairs typed PT/EN content and public evidence links. `src/components/CasePage.astro` shares the case document and approved header/footer language. `src/pages/[locale]/[section]/[slug].astro` generates the six approved routes. `src/styles/cases.css` scopes case layout. Minimal integration edits are in `Home.astro`, `content.ts`, `site.ts` and `utils/paths.ts`. Existing build/browser checks now include the cases.
 
-## Verification
+## Evidence boundaries
 
-- Astro type check: zero errors, warnings or hints.
-- Production build: three static pages.
-- Scenario data check: navigation boundaries, same retry key and response directions.
-- Browser checks at initial delivery: 40/40 passed, covering PT/EN × light/dark × desktop/mobile; images, keyboard/dialog focus restoration, finite scenarios, reduced motion, locale/theme persistence, CV download and no-JS content.
-- Additional responsive coverage: 320, 360, 430, 560, 768 and 1024 px.
-- Automated axe scans: zero WCAG 2/2.1 AA violations across eight locale/theme/viewport combinations. This does not replace assistive-technology testing.
-- One local mobile Lighthouse diagnostic: performance 97; accessibility, best practices and SEO 100. LCP 2.4 seconds; total blocking time 0 ms; CLS 0. These are local diagnostic results, not deployment measurements.
-- Visual review: desktop and mobile, light and dark, hero, Carely evidence, Fintech diagram and contact.
+Carely screenshots contain different demonstrative vacancies; they are representative steps, not a recorded single application or evidence of institutional receipt. No current App Store build correspondence is claimed. Contribution is frontend/iOS within a team.
 
-## Issues encountered and corrected
+Fintech sources were checked at public iOS `48ff69b` and API `cba4a86`, matching local HEADs. Session generation guards are described only for login/refresh completion. The portfolio diagram makes no real requests. Product repositories were inspected, not executed in production.
 
-The portrait orbit initially exceeded the viewport on mobile/tablet; its responsive transform/inset were corrected and a regression check retained. Node type declarations were added for the runnable scenario check. Native Chromium was unavailable, so browser checks use the installed Brave executable. A browser run overlapped a rebuild and saw a transient favicon 404; the complete stable-build rerun passed. Absolute language metadata is generated only when `PUBLIC_SITE_URL` is supplied, avoiding an invented deployment domain.
+Jordania public iOS `ab20de9` and backend `55c6212` are newer than the local checkouts. The case cites those public snapshots. Attribution is frontend/iOS, session/client integration and contribution to authentication routes; current live Apple/Google operation is not claimed.
 
-## Evidence limits and next step
+Internal claim classifications are in `review/claims-audit.md`. Browser reports, link verification and final screenshots are local review artifacts; generated PNG/JSON files are ignored by Git.
 
-Development/demo Carely captures do not establish the current App Store binary or successful institutional delivery. Fintech remains in development and its diagram makes no real requests. Academy is education. Repository destinations and the App Store link returned HTTP 200 during review; LinkedIn blocks automated fetching, and its exact CV URL was preserved.
+## Verification and issues
 
-The development preview is available at `http://127.0.0.1:4330/pt/` and `/en/`. Review the composition and bilingual copy in that preview. A deployment domain and an English CV are future inputs, not blockers for the current site.
+Final validation: `npm run check` reports zero errors/warnings/hints; `npm run build` generates nine static routes; `SITE_URL=http://127.0.0.1:4331 npm test` passes 106/106 browser checks, including 48 case locale/theme/viewport combinations and 56 total automated WCAG AA scans without violations. All 17 case external destinations return HTTP 200. Sixteen final screenshots cover Home and cases at mobile/desktop in light/dark. Keyboard navigation, dialog focus restoration, equivalent language switching, no-JS content and reduced motion pass. Final human editorial/visual approval remains pending. A desktop EN stack label initially wrapped within a word; its flex shrinking was disabled and a browser regression assertion added. Python’s local TLS certificate store could not verify public links; native curl verified them without disabling certificate checks. Browser tests explicitly scroll through lazy-loaded images before verifying them.
 
-## Latest adjustment — Contact CTA
+## Next step
 
-The English hero Contact link now uses a secondary button style with a neutral surface, visible border and hover feedback. View projects retains the filled primary treatment. Both controls have a 52 px target height. Focused visual review covered 1440 px and 390 px in light/dark themes, keyboard focus and navigation to the contact section. The existing browser check selects Contact by its destination instead of its presentation class. No failed implementation attempts remain for this adjustment.
+Human editorial and visual review of the cases. Preview for this session: `http://127.0.0.1:4331/Portfolio/pt/` (4330 was already occupied). No commit, push, deployment, stack migration or additional polish is authorized by this loop.

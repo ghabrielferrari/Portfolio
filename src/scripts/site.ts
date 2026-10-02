@@ -48,10 +48,12 @@ if (document.body.hasAttribute("data-language-entry")) {
   location.replace(`${withBase(`${language}/`)}${location.hash}`);
 }
 let currentSection = location.hash.slice(1) || "top";
-const updateLanguages = () =>
+const updateLanguages = () => {
+  if (document.body.hasAttribute("data-case")) return;
   languageLinks.forEach((link) => {
     link.href = `${withBase(`${link.dataset.language}/`)}${currentSection === "top" ? "" : `#${currentSection}`}`;
   });
+};
 updateLanguages();
 window.addEventListener("hashchange", () => {
   currentSection = location.hash.slice(1) || "top";

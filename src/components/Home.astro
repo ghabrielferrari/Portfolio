@@ -2,7 +2,7 @@
 import { content, links } from '../data/content';
 import CaseNotes from './CaseNotes.astro';
 import FintechFlow from './FintechFlow.astro';
-import { withBase } from '../utils/paths';
+import { withBase, casePath } from '../utils/paths';
 import displayFontUrl from '../assets/fonts/bricolage-grotesque-latin-600.woff2?url';
 import '../styles/global.css';
 interface Props { locale: 'pt' | 'en'; isEntry?: boolean; }
@@ -93,7 +93,7 @@ const cvPath = withBase('documents/gabriel-ferrari-cv-pt.docx');
               </button>
             </figure>)}
           </div>
-          <div class="evidence-footer"><p>{t.carelyNote}</p><div class="project-links"><a href={links.appstore} target="_blank" rel="noopener noreferrer">App Store <span aria-hidden="true">↗</span></a><a href={links.carely} target="_blank" rel="noopener noreferrer">{t.repository} <span aria-hidden="true">↗</span></a></div></div>
+          <div class="evidence-footer"><p>{t.carelyNote}</p><div class="project-links"><a href={casePath(locale, 'carely')} data-case-link="carely">{locale === 'pt' ? 'Ver case' : 'Read case'}<span class="sr-only"> — Carely</span><span aria-hidden="true"> ↗</span></a><a href={links.appstore} target="_blank" rel="noopener noreferrer">App Store <span aria-hidden="true">↗</span></a><a href={links.carely} target="_blank" rel="noopener noreferrer">{t.repository} <span aria-hidden="true">↗</span></a></div></div>
           <details class="secondary-evidence"><summary>{t.secondary}<span aria-hidden="true">+</span></summary><div class="secondary-content"><p>{t.secondaryText}</p>{['carely-institution', 'carely-institution-info'].map((src, i) => <button type="button" class="screen-button" data-image={withBase(`media/${src}.webp`)} data-caption={t.secondary} aria-label={`${t.expandImage}: ${t.secondary} ${i+1}`}><img src={withBase(`media/${src}.webp`)} width="650" height="1409" loading="lazy" alt={locale === 'pt' ? 'Detalhes de instituição no Carely durante o desenvolvimento.' : 'Carely institution details during development. The app interface is in Portuguese.'}/><span class="expand-sign" aria-hidden="true">↗</span></button>)}</div></details>
           <CaseNotes title={t.decisions} items={t.carelyCase}/>
         </article>
@@ -101,11 +101,11 @@ const cvPath = withBase('documents/gabriel-ferrari-cv-pt.docx');
           <div class="project-title"><div class="project-name"><span class="fintech-mark" aria-hidden="true"><i></i><i></i><i></i></span><div><h3>Fintech</h3><p>{t.personal} / iOS + API</p></div></div><h4 id="fintech-title">{t.fintechTitle}</h4></div>
           <div class="project-overview"><div><span class="status"><i></i>{t.development}</span><p class="project-intro">{t.fintechIntro}</p></div><div class="contribution"><h5>{t.contribution}</h5><p>{t.fintechContribution}</p></div></div>
           <FintechFlow locale={locale}/>
-          <div class="project-links fintech-links"><a href={links.fintechIOS} target="_blank" rel="noopener noreferrer">{t.iosRepo} <span aria-hidden="true">↗</span></a><a href={links.fintechAPI} target="_blank" rel="noopener noreferrer">API <span aria-hidden="true">↗</span></a><a href={links.fintechDocs} target="_blank" rel="noopener noreferrer">{t.documentation} <span aria-hidden="true">↗</span></a></div>
+          <div class="project-links fintech-links"><a href={casePath(locale, 'fintech')} data-case-link="fintech">{locale === 'pt' ? 'Ver case' : 'Read case'}<span class="sr-only"> — Fintech</span><span aria-hidden="true"> ↗</span></a><a href={links.fintechIOS} target="_blank" rel="noopener noreferrer">{t.iosRepo} <span aria-hidden="true">↗</span></a><a href={links.fintechAPI} target="_blank" rel="noopener noreferrer">API <span aria-hidden="true">↗</span></a><a href={links.fintechDocs} target="_blank" rel="noopener noreferrer">{t.documentation} <span aria-hidden="true">↗</span></a></div>
           <CaseNotes title={t.decisions} items={t.fintechCase}/>
         </article>
         <article id="jordania" class="project jordania" aria-labelledby="jordania-title">
-          <div class="jordania-copy"><div class="project-name"><div><h3>Jordania</h3><p>{t.team} / iOS + Java</p></div></div><h4 id="jordania-title">{t.jordaniaTitle}</h4><p>{t.jordaniaIntro}</p><p class="jordania-note">{t.jordaniaNote}</p><div class="project-links"><a href={links.jordaniaIOS} target="_blank" rel="noopener noreferrer">{t.iosRepo} <span aria-hidden="true">↗</span></a><a href={links.jordaniaAPI} target="_blank" rel="noopener noreferrer">{t.backendRepo} <span aria-hidden="true">↗</span></a></div></div>
+          <div class="jordania-copy"><div class="project-name"><div><h3>Jordania</h3><p>{t.team} / iOS + Java</p></div></div><h4 id="jordania-title">{t.jordaniaTitle}</h4><p>{t.jordaniaIntro}</p><p class="jordania-note">{t.jordaniaNote}</p><div class="project-links"><a href={casePath(locale, 'jordania')} data-case-link="jordania">{locale === 'pt' ? 'Ver case' : 'Read case'}<span class="sr-only"> — Jordania</span><span aria-hidden="true"> ↗</span></a><a href={links.jordaniaIOS} target="_blank" rel="noopener noreferrer">{t.iosRepo} <span aria-hidden="true">↗</span></a><a href={links.jordaniaAPI} target="_blank" rel="noopener noreferrer">{t.backendRepo} <span aria-hidden="true">↗</span></a></div></div>
           <div class="jordania-graphic" aria-hidden="true"><div class="provider-pair"><span>Apple</span><span>Google</span></div><div class="j-connector"></div><span class="j-session">iOS / {locale === 'pt' ? 'Sessão' : 'Session'}</span><div class="j-connector"></div><span class="j-backend">Java / Spring</span><div class="j-routes"><span>login</span><span>refresh</span><span>logout</span></div></div>
           <div class="jordania-case"><CaseNotes title={t.decisions} items={t.jordaniaCase}/></div>
         </article>

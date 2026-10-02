@@ -56,7 +56,7 @@ export const content = {
     expandImage: "Ampliar captura",
     closeImage: "Fechar captura",
     carelyNote:
-      "Capturas de desenvolvimento com dados demonstrativos. A correspondência com a versão atual da App Store não foi confirmada.",
+      "Capturas de desenvolvimento com dados demonstrativos, em etapas representativas com vagas diferentes. A correspondência com a versão atual da App Store não foi confirmada.",
     secondary: "Também no fluxo de instituições",
     secondaryText:
       "Listagens e informações de instituições como evidência complementar da navegação.",
@@ -121,9 +121,9 @@ export const content = {
     ],
     jordaniaTitle: "Autenticação, dos dois lados.",
     jordaniaIntro:
-      "Projeto em equipe. Desenvolvi o frontend iOS e a infraestrutura de autenticação e sessão, implementei as rotas Java/Spring de login, refresh e logout e sua integração com o iOS.",
+      "Projeto em equipe. Desenvolvi o frontend iOS e a infraestrutura de autenticação e sessão, contribuí nas rotas Java/Spring de login, refresh e logout e sua integração com o iOS.",
     jordaniaNote:
-      "Os fluxos Apple e Google funcionaram com provedores reais durante o desenvolvimento.",
+      "Integração Apple e Google durante o desenvolvimento; não implica validação atual em produção.",
     jordaniaCase: [
       [
         "Contexto e responsabilidade",
@@ -139,7 +139,7 @@ export const content = {
       ],
       [
         "Evidência e estado",
-        "Repositórios iOS e backend disponíveis. Os provedores Apple e Google funcionaram durante o desenvolvimento, sem implicar disponibilidade em produção.",
+        "Repositórios iOS e backend disponíveis. Integração Apple e Google presente no código de desenvolvimento, sem implicar disponibilidade em produção.",
       ],
       [
         "O que validaria em seguida",
@@ -227,7 +227,7 @@ export const content = {
     expandImage: "Expand screenshot",
     closeImage: "Close screenshot",
     carelyNote:
-      "Development screenshots with demo data. Their correspondence with the current App Store version has not been confirmed. The app interface is in Portuguese.",
+      "Development screenshots with demo data, showing representative steps with different vacancies. Their correspondence with the current App Store version has not been confirmed. The app interface is in Portuguese.",
     secondary: "Also in the institution flow",
     secondaryText:
       "Institution listings and information provide additional evidence of navigation.",
@@ -292,9 +292,9 @@ export const content = {
     ],
     jordaniaTitle: "Authentication on both sides.",
     jordaniaIntro:
-      "Team project. I developed the iOS frontend and authentication/session infrastructure, implemented Java/Spring login, refresh and logout endpoints and their integration with iOS.",
+      "Team project. I developed the iOS frontend and authentication/session infrastructure, contributed to Java/Spring login, refresh and logout endpoints and their integration with iOS.",
     jordaniaNote:
-      "Apple and Google flows worked with real providers during development.",
+      "Apple and Google integration during development; this does not imply current production validation.",
     jordaniaCase: [
       [
         "Context and responsibility",
@@ -310,7 +310,7 @@ export const content = {
       ],
       [
         "Evidence and state",
-        "iOS and backend repositories are available. Apple and Google providers worked during development, without implying production availability.",
+        "iOS and backend repositories are available. Apple and Google integration is present in development code, without implying production availability.",
       ],
       [
         "What I would validate next",

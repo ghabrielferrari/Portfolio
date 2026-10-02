@@ -1,0 +1,13 @@
+---
+import CasePage from '../../../components/CasePage.astro';
+import { cases } from '../../../data/cases';
+import type { CaseSlug, Locale } from '../../../data/cases';
+export function getStaticPaths() {
+  return (['pt', 'en'] as const).flatMap(locale =>
+    Object.keys(cases).map(slug => ({ params: { locale, section: locale === 'pt' ? 'projetos' : 'work', slug } }))
+  );
+}
+const locale = Astro.params.locale as Locale;
+const slug = Astro.params.slug as CaseSlug;
+---
+<CasePage locale={locale} slug={slug} />

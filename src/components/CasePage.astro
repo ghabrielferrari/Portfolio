@@ -1,0 +1,126 @@
+---
+import { content } from '../data/content';
+import { cases } from '../data/cases';
+import type { CaseSlug, Locale } from '../data/cases';
+import { withBase, casePath } from '../utils/paths';
+import displayFontUrl from '../assets/fonts/bricolage-grotesque-latin-600.woff2?url';
+import '../styles/global.css';
+import '../styles/cases.css';
+interface Props { locale: Locale; slug: CaseSlug; }
+const { locale, slug } = Astro.props;
+const t = content[locale];
+const study = cases[slug];
+const local = (value: { pt: string; en: string }) => value[locale];
+const homePath = withBase(`${locale}/`);
+const sections = ['projects', 'profile', 'contact'];
+const canonical = new URL(casePath(locale, slug), Astro.site);
+const cvPath = withBase('documents/gabriel-ferrari-cv-pt.docx');
+const labels = locale === 'pt' ? {
+  back: 'Voltar aos projetos', role: 'Meu papel', context: 'Contexto', stack: 'Tecnologias',
+  state: 'Estado e resultado demonstrável', limits: 'Limites da evidência', links: 'Código e referências',
+  evidence: 'Evidência no código', represented: 'Etapas representativas do fluxo',
+} : {
+  back: 'Back to projects', role: 'My role', context: 'Context', stack: 'Technologies',
+  state: 'Status and demonstrated outcome', limits: 'Evidence limits', links: 'Code and references',
+  evidence: 'Code evidence', represented: 'Representative steps in the flow',
+};
+---
+<!doctype html>
+<html lang={locale === 'pt' ? 'pt-BR' : 'en'} data-locale={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{study.name} — {local(study.title)} | Gabriel Ferrari</title>
+    <meta name="description" content={local(study.description)} />
+    <meta name="theme-color" content="#f4f6fb" />
+    <meta property="og:title" content={`${study.name} — ${local(study.title)} | Gabriel Ferrari`} />
+    <meta property="og:description" content={local(study.description)} />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={locale === 'pt' ? 'pt_BR' : 'en_US'} />
+    <meta property="og:locale:alternate" content={locale === 'pt' ? 'en_US' : 'pt_BR'} />
+    <link rel="icon" href={withBase('favicon.svg')} type="image/svg+xml" />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="pt-BR" href={new URL(casePath('pt', slug), Astro.site)} />
+    <link rel="alternate" hreflang="en" href={new URL(casePath('en', slug), Astro.site)} />
+    <link rel="alternate" hreflang="x-default" href={new URL(casePath('en', slug), Astro.site)} />
+    <link rel="preload" href={displayFontUrl} as="font" type="font/woff2" crossorigin />
+    <script is:inline>
+      try {
+        const stored = localStorage.getItem('gf-theme');
+        document.documentElement.dataset.theme = stored === 'dark' || stored === 'light' ? stored : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      } catch { document.documentElement.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+    </script>
+  </head>
+  <body data-case={slug}>
+    <a class="skip-link" href="#main">{t.skip}</a>
+    <header class="site-header">
+      <a class="brand" href={withBase(`${locale}/`)} aria-label="Gabriel Ferrari">
+        <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M23 10H16a10 10 0 0 0 0 20h8V20H16M31 10v20M31 10h7M31 20h6" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        <span>Gabriel Ferrari</span>
+      </a>
+      <nav class="main-nav" aria-label={locale === 'pt' ? 'Navegação principal' : 'Main navigation'}>
+        {t.nav.map((label, i) => <a href={`${homePath}#${sections[i]}`}>{label}</a>)}
+      </nav>
+      <div class="header-controls">
+        <nav class="languages" aria-label={locale === 'pt' ? 'Idioma' : 'Language'}>
+          <a href={casePath('pt', study.id)} lang="pt-BR" hreflang="pt-BR" data-language="pt" aria-current={locale === 'pt' ? 'page' : undefined} aria-label="Português">PT</a>
+          <a href={casePath('en', study.id)} lang="en" hreflang="en" data-language="en" aria-current={locale === 'en' ? 'page' : undefined} aria-label="English">EN</a>
+        </nav>
+        <button class="theme-toggle" type="button" aria-label={t.theme} aria-pressed="false">
+          <svg class="sun" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"/></svg>
+        </button>
+      </div>
+    </header>
+    <main id="main" class={`case-page case-${slug} shell`}>
+      <div id="top" class="case-opening">
+        <a class="case-back" href={`${homePath}#${slug}`}>{labels.back}</a>
+        <p class="case-identity">{study.name} / {local(study.category)}</p>
+        <h1>{local(study.title)}</h1>
+        <p class="case-lead">{local(study.description)}</p>
+      </div>
+      <div class="case-context">
+        <section aria-labelledby="context-title"><h2 id="context-title">{labels.context}</h2><p>{local(study.context)}</p></section>
+        <section class="contribution" aria-labelledby="role-title"><h2 id="role-title">{labels.role}</h2><p>{local(study.role)}</p></section>
+      </div>
+      <p class="case-stack"><strong>{labels.stack}</strong><span>{study.stack.join(' · ')}</span></p>
+      {study.screens && <section class="case-visual" aria-labelledby="screens-title">
+        <h2 id="screens-title">{labels.represented}</h2>
+        <p class="case-disclosure">{local(study.screenNote!)}</p>
+        <div class="case-screens">{study.screens.map((screen, i) => <figure>
+          <button class="screen-button" type="button" data-image={withBase(`media/${screen.asset}.webp`)} data-caption={`${local(screen.title)} — ${local(screen.caption)}`} aria-label={`${t.expandImage}: ${local(screen.title)}`}>
+            <img src={withBase(`media/${screen.asset}.webp`)} width="650" height="1409" alt={local(screen.alt)} loading={i === 0 ? 'eager' : 'lazy'} /><span class="expand-sign" aria-hidden="true">↗</span>
+          </button>
+          <figcaption><h3>{local(screen.title)}</h3><p>{local(screen.caption)}</p></figcaption>
+        </figure>)}</div>
+      </section>}
+      {study.scenarios && <section class="case-scenarios" aria-labelledby="scenarios-title">
+        <h2 id="scenarios-title">{locale === 'pt' ? 'Três caminhos, incluindo a falha' : 'Three paths, including failure'}</h2>
+        <p class="case-disclosure">{local(study.scenarioNote!)}</p>
+        {study.scenarios.map((scenario, i) => <article class="case-scenario" aria-labelledby={`scenario-${i}`}>
+          <h3 id={`scenario-${i}`}>{local(scenario.title)}</h3>
+          <ol class="case-sequence">{scenario.steps.map(step => <li>{local(step)}</li>)}</ol>
+          <p>{local(scenario.implementation)}</p>
+          <p class="case-decision">{local(scenario.decision)}</p>
+          <div class="case-references"><span>{labels.evidence}</span>{scenario.references.map(ref => <a href={ref.url} target="_blank" rel="noopener noreferrer">{ref.label}<span aria-hidden="true"> ↗</span></a>)}</div>
+        </article>)}
+      </section>}
+      {study.authPath && <section class="case-auth" aria-labelledby="auth-title">
+        <h2 id="auth-title">{locale === 'pt' ? 'Do provedor à sessão' : 'From provider to session'}</h2>
+        <ol class="case-sequence">{study.authPath.map(step => <li>{local(step)}</li>)}</ol>
+      </section>}
+      <div class="case-sections">{study.sections.map((section, i) => <section aria-labelledby={`section-${i}`}>
+        <h2 id={`section-${i}`}>{local(section.title)}</h2><p>{local(section.text)}</p>
+        {section.references && <div class="case-references">{section.references.map(ref => <a href={ref.url} target="_blank" rel="noopener noreferrer">{ref.label}<span aria-hidden="true"> ↗</span></a>)}</div>}
+      </section>)}</div>
+      <section class="case-state" aria-labelledby="state-title"><h2 id="state-title">{labels.state}</h2><p>{local(study.state)}</p></section>
+      <aside class="case-limits" aria-labelledby="limits-title"><h2 id="limits-title">{labels.limits}</h2><ul>{study.limits.map(limit => <li>{local(limit)}</li>)}</ul></aside>
+      <section class="case-links" aria-labelledby="links-title"><h2 id="links-title">{labels.links}</h2><div class="project-links">{study.links.map(link => <a href={link.url} target="_blank" rel="noopener noreferrer">{local(link.label)} <span aria-hidden="true">↗</span></a>)}</div></section>
+      <a class="case-back" href={`${homePath}#${slug}`}>{labels.back}</a>
+    </main>
+    <footer class="site-footer shell"><span>{t.footer}</span><span>Swift / SwiftUI / iOS</span>{locale === 'en' && <a href={cvPath} download>{t.cv} (Portuguese)</a>}<a href="#top">{t.backTop} <span aria-hidden="true">↑</span></a></footer>
+    <dialog class="image-dialog" aria-labelledby="image-caption"><button type="button" class="image-close" aria-label={t.closeImage}>×</button><figure><img alt=""/><figcaption id="image-caption"></figcaption></figure></dialog>
+    <script>import '../scripts/site';</script>
+  </body>
+</html>

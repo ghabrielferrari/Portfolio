@@ -546,6 +546,108 @@ try {
     },
   );
   await noJS.context.close();
+  const caseRoute = (locale, slug) => `${base}/${locale}/${locale === "pt" ? "projetos" : "work"}/${slug}/`;
+  for (const locale of ["pt", "en"]) for (const theme of ["light", "dark"]) {
+    const caseContext = await browser.newContext({ colorScheme: theme });
+    const casePage = await caseContext.newPage();
+    casePage.on("pageerror", error => report.errors.push({ type: "case-pageerror", message: error.message }));
+    casePage.on("console", message => { if (message.type() === "error") report.errors.push({ type: "case-console", message: message.text() }); });
+    for (const slug of ["carely", "fintech", "jordania"]) for (const width of [320, 390, 768, 1440]) {
+      const label = `${slug}-${locale}-${theme}-${width}`;
+      await check(`${label}: base route, theme, mobile, content and WCAG AA`, async () => {
+        await casePage.setViewportSize({ width, height: 900 });
+        const response = await casePage.goto(caseRoute(locale, slug), { waitUntil: "load" });
+        assert.equal(response.status(), 200);
+        await casePage.evaluate(() => document.fonts.ready);
+        assert.equal(await casePage.locator("html").getAttribute("lang"), locale === "pt" ? "pt-BR" : "en");
+        assert.equal(await casePage.locator("html").getAttribute("data-theme"), theme);
+        assert.equal(await casePage.locator("h1").count(), 1);
+        assert.ok(await casePage.locator("#role-title").isVisible());
+        assert.equal(await casePage.locator(".case-scenario").count(), slug === "fintech" ? 3 : 0);
+        assert.equal(await casePage.locator(".case-screens figure").count(), slug === "carely" ? 3 : 0);
+        if (width > 760) assert.ok(await casePage.locator(".case-stack strong").evaluate(el => { const range = document.createRange(); range.selectNodeContents(el); return range.getClientRects().length === 1; }), "Technology label must stay on one line");
+        for (const image of await casePage.locator("img[src]").all()) await image.scrollIntoViewIfNeeded();
+        await casePage.locator(".case-links").scrollIntoViewIfNeeded();
+        const urls = await casePage.locator("[href], [src], [data-image]").evaluateAll(elements => elements.flatMap(element => ["href", "src", "data-image"].map(name => element.getAttribute(name)).filter(value => value?.startsWith("/"))));
+        for (const path of new Set(urls)) {
+          assert.ok(path.startsWith(config.base), path);
+          assert.equal((await caseContext.request.get(new URL(path, base).href)).status(), 200, path);
+        }
+        const sizes = await casePage.evaluate(() => [innerWidth, document.documentElement.scrollWidth]);
+        assert.ok(sizes[1] <= sizes[0] + 1, `Overflow: ${sizes}`);
+        await casePage.waitForFunction(() => [...document.images].filter(img => img.getAttribute("src")).every(img => img.complete && img.naturalWidth));
+        if (slug === "carely") {
+          const boxes = await casePage.locator(".case-screens figure").evaluateAll(elements => elements.map(element => { const b = element.getBoundingClientRect(); return { x: b.x, y: b.y, width: b.width, height: b.height }; }));
+          if (width < 761) assert.ok(boxes[1].y >= boxes[0].y + boxes[0].height && boxes[2].y >= boxes[1].y + boxes[1].height, "Screens and captions must remain ordered on mobile");
+        }
+        await casePage.addScriptTag({ content: axe });
+        const violations = await casePage.evaluate(async () => (await window.axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] } })).violations.map(({ id, nodes }) => ({ id, targets: nodes.map(node => node.target) })));
+        report.accessibility.push({ label, violations });
+        assert.deepEqual(violations, []);
+        await casePage.emulateMedia({ reducedMotion: "reduce" });
+        assert.equal(await casePage.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior), "auto");
+        assert.equal(await casePage.evaluate(() => document.getAnimations().filter(animation => animation.playState === "running").length), 0);
+        await casePage.emulateMedia({ reducedMotion: "no-preference" });
+        if (locale === "pt" && [390, 1440].includes(width) && process.env.CAPTURE !== "0") {
+          await casePage.evaluate(() => scrollTo(0, 0));
+          const path = `${output}case-${slug}-${width}-${theme}.png`;
+          await casePage.screenshot({ path, fullPage: true });
+          report.screenshots.push(path);
+        }
+      });
+    }
+    await caseContext.close();
+  }
+  for (const locale of ["pt", "en"]) for (const slug of ["carely", "fintech", "jordania"]) {
+    await check(`${slug}-${locale}: keyboard Home → case → equivalent language → Home`, async () => {
+      const entry = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
+      try {
+        const page = await entry.newPage();
+        await page.goto(`${base}/${locale}/`, { waitUntil: "load" });
+        const cta = page.locator(`[data-case-link="${slug}"]`);
+        await cta.focus();
+        assert.equal(await cta.evaluate(el => getComputedStyle(el).outlineStyle), "solid");
+        await page.keyboard.press("Enter");
+        await page.waitForURL(caseRoute(locale, slug));
+        await page.locator(".theme-toggle").focus();
+        await page.keyboard.press("Enter");
+        assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
+        if (slug === "carely") {
+          const trigger = page.locator("[data-image]").first();
+          await trigger.focus();
+          await page.keyboard.press("Enter");
+          await page.waitForFunction(() => document.querySelector("dialog").open);
+          assert.equal(await page.locator(".image-dialog img").getAttribute("src"), await trigger.getAttribute("data-image"));
+          await page.keyboard.press("Escape");
+          assert.ok(await trigger.evaluate(el => document.activeElement === el));
+        }
+        await page.evaluate(() => { location.hash = "state-title"; });
+        const other = locale === "pt" ? "en" : "pt";
+        const language = page.locator(`[data-language="${other}"]`);
+        assert.equal(await language.getAttribute("href"), new URL(caseRoute(other, slug)).pathname);
+        await language.focus();
+        await page.keyboard.press("Enter");
+        await page.waitForURL(caseRoute(other, slug));
+        assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
+        await page.locator(".case-back").first().focus();
+        await page.keyboard.press("Enter");
+        await page.waitForURL(`${base}/${other}/#${slug}`);
+        assert.equal(await page.locator("html").getAttribute("lang"), other === "pt" ? "pt-BR" : "en");
+      } finally { await entry.close(); }
+    });
+    await check(`${slug}-${locale}: case and language links without JavaScript`, async () => {
+      const entry = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 320, height: 844 } });
+      try {
+        const page = await entry.newPage();
+        await page.goto(caseRoute(locale, slug), { waitUntil: "load" });
+        assert.ok(await page.locator("h1").isVisible());
+        assert.ok(await page.locator("#role-title").isVisible());
+        const other = locale === "pt" ? "en" : "pt";
+        await page.locator(`[data-language="${other}"]`).click();
+        await page.waitForURL(caseRoute(other, slug));
+      } finally { await entry.close(); }
+    });
+  }
   await check("No JavaScript or console errors", async () =>
     assert.deepEqual(report.errors, []),
   );
